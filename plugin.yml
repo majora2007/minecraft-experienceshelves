@@ -1,0 +1,7 @@
+name: ExperienceShelves
+version: 0.1
+main: com.majora.minecraft.experienceshelves.ExperienceShelves
+
+description: DESCRIPTION OF PLUGIN
+author: majora2007
+database: false
