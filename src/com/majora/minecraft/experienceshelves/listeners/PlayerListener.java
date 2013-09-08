@@ -9,7 +9,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -21,8 +20,6 @@ public class PlayerListener implements Listener {
 	
 	private ExperienceShelves plugin;
 	private IRepository<Location, XPVault> repository;
-	
-	//private Map<Location, XPVault> vaults;
 	
 	// NOTE: It looks like xp is store internally as a char, meaning max xp is 
 	// 65,635
@@ -103,8 +100,6 @@ public class PlayerListener implements Listener {
 
 	private void handleStoreXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
-		
-		// You don't set balance, but add to balance
 		accessedVault.addBalance(totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
@@ -120,26 +115,30 @@ public class PlayerListener implements Listener {
 		ExperienceShelves.log("Handling Withdraw");
 		final long startingBalance = accessedVault.getRealBalance();
 		
-		final long leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
-		
-		if ( leftoverXp < 0)
+		if ( isBalanceGreaterThanPlayerCanHold(totalXp, accessedVault) )
 		{
-			handleOverflowWithdraw(player, accessedVault, leftoverXp);
+			handleOverflowWithdraw(player, accessedVault);
 		} else {
 			handleRegularWithdraw(player, accessedVault);
 		}
 		
-		player.sendMessage(startingBalance - accessedVault.getRealBalance() + " has been withdrawn.");
+		// BUG: This is not displaying an accurate amount of xp that was withdrawn.
+		player.sendMessage(NumberFormat.getInstance().format(startingBalance - accessedVault.getRealBalance()) + " has been withdrawn.");
 	}
 
-	private void handleOverflowWithdraw(final Player player, 
-			final XPVault accessedVault, final long leftoverXp) {
-		ExperienceShelves.log("Handling Overflow Withdraw");
-		// There is leftover, so let's take abs value and store into vault
-		player.setExp(1.0f);
-		player.setLevel(MAX_LEVEL);
 
-		accessedVault.setBalance(Math.abs(leftoverXp));
+	private boolean isBalanceGreaterThanPlayerCanHold(final long totalXp,
+			final XPVault accessedVault) {
+		return MAX_EXP - (totalXp + accessedVault.getBalance()) < 0;
+	}
+
+	private void handleOverflowWithdraw(final Player player, final XPVault accessedVault) {
+		
+		ExperienceShelves.log("Handling Overflow Withdraw");
+		player.setExp(0.0f);
+		player.setLevel(MAX_LEVEL+1);
+		
+		accessedVault.subtractFromBalance(MAX_EXP);
 	}
 
 	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) {
