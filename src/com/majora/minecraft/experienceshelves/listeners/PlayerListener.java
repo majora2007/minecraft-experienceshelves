@@ -3,6 +3,7 @@ package com.majora.minecraft.experienceshelves.listeners;
 import java.text.NumberFormat;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -37,7 +38,6 @@ public class PlayerListener implements Listener {
 	
 	public PlayerListener(ExperienceShelves instance, IRepository<Location, XPVault> repo) {
 		this.plugin = instance;
-		
 		this.repository = repo;
 	}
 	
@@ -54,11 +54,10 @@ public class PlayerListener implements Listener {
 			XPVault vault = repository.get(block.getLocation());
 			if (vault.getOwnerName().equals(event.getPlayer().getName()))
 			{
-				// Destroy block and remove from IRepository (no-metadata method)
 				repository.remove(block.getLocation());
-				repository.save(); // Save after we remove (TODO: Profile save and load method)
+				repository.save();
 			} else {
-				event.getPlayer().sendMessage(ExperienceShelves.prefix + "You cannot break someone else's vault.");
+				event.getPlayer().sendMessage(ChatColor.RED + "You cannot break someone else's vault.");
 				event.setCancelled(true);
 			}
 		}
@@ -85,7 +84,7 @@ public class PlayerListener implements Listener {
 			if (!isPlayerVaultOwner(player, accessedVault)) return;
 			
 			if (accessedVault.isLocked()) {
-				player.sendMessage(ExperienceShelves.prefix + "You must unlock the vault before you can interact.");
+				player.sendMessage(ChatColor.RED + "You must unlock the vault before you can interact.");
 				return;
 			}
 			
@@ -95,7 +94,7 @@ public class PlayerListener implements Listener {
 				{
 					handleWithdrawXP(player, totalXp, accessedVault);
 				} else {
-					player.sendMessage(ExperienceShelves.prefix + "The vault is empty.");
+					player.sendMessage(ChatColor.GREEN + "The vault is empty.");
 				}
 			} else if (isLeftClick(event) && isPlayerHandEmpty(event))
 			{
@@ -103,7 +102,7 @@ public class PlayerListener implements Listener {
 				{
 					handleStoreXP(player, totalXp, accessedVault);
 				} else {
-					player.sendMessage(ExperienceShelves.prefix + "You have no xp to store.");
+					player.sendMessage(ChatColor.GREEN + "You have no xp to store.");
 				}
 			}
 		} 
@@ -136,13 +135,12 @@ public class PlayerListener implements Listener {
 		accessedVault.addBalance(totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
-		player.sendMessage(ExperienceShelves.prefix + "Added " + NumberFormat.getInstance().format(totalXp) + " to vault.");
+		player.sendMessage(ChatColor.DARK_PURPLE + "Added " + ChatColor.GOLD + NumberFormat.getInstance().format(totalXp) + ChatColor.DARK_PURPLE + " to vault.");
 	}
 
 	private void handleWithdrawXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
 		
-		ExperienceShelves.log("Handling Withdraw");
 		final long startingBalance = accessedVault.getRealBalance();
 		
 		if ( isBalanceGreaterThanPlayerCanHold(totalXp, accessedVault) )
@@ -152,7 +150,7 @@ public class PlayerListener implements Listener {
 			handleRegularWithdraw(player, accessedVault);
 		}
 		
-		player.sendMessage(NumberFormat.getInstance().format(startingBalance - accessedVault.getRealBalance()) + " has been withdrawn.");
+		player.sendMessage(ChatColor.GOLD + NumberFormat.getInstance().format(startingBalance - accessedVault.getRealBalance()) + ChatColor.DARK_PURPLE + " has been withdrawn.");
 	}
 
 
@@ -161,19 +159,16 @@ public class PlayerListener implements Listener {
 		return MAX_EXP - (totalXp + accessedVault.getBalance()) < 0;
 	}
 
-	private void handleOverflowWithdraw(final Player player, final XPVault accessedVault) {
-		
-		//ExperienceShelves.log("Handling Overflow Withdraw");
+	private void handleOverflowWithdraw(final Player player, final XPVault accessedVault) 
+	{
 		player.setExp(0.0f);
 		player.setLevel(MAX_LEVEL);
 		
 		accessedVault.subtractFromBalance(MAX_EXP);
 	}
 
-	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) {
-		
-		//ExperienceShelves.log("Handling Normal Withdraw");
-		
+	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) 
+	{
 		int tempBalance = accessedVault.getBalance();
 		final int currentProgress = calculateTotalXPForLevelProgress(player);
 		
@@ -188,8 +183,8 @@ public class PlayerListener implements Listener {
 			}
 		}
 		
-		// At this point tempBalance is less than next level, so we calculate the percentage till next level, 
-		// and set it.
+		// At this point tempBalance is less than next level, so we calculate the 
+		//percentage till next level, and set it.
 		final float percentage = (tempBalance*1.0f) / (player.getExpToLevel()*1.0f);
 		
 		// If we give player percentage, then our vault is empty. 
@@ -203,14 +198,11 @@ public class PlayerListener implements Listener {
 		
 		if (repository.containsKey(blockLoc)) {
 			accessedVault = repository.get(clickedBlock.getLocation());
-			//ExperienceShelves.log("Repository found existing Vault(" + accessedVault.getBalance() + ").");
-			// TODO: Perform extra check here to make sure Block is still a valid vault
-			// NOTE: This can occur when a user moves the vault. 
-			
 		} else {
-			ExperienceShelves.log("Creating new Vault.");
+			//ExperienceShelves.log("Creating new Vault.");
 			accessedVault = createXPVault(clickedBlock, player);
 			repository.put(clickedBlock.getLocation(), accessedVault);
+			repository.save();
 		}
 		return accessedVault;
 	}

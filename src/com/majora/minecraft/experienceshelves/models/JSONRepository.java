@@ -82,7 +82,6 @@ public class JSONRepository implements IRepository<Location, XPVault> {
 				JSONObject jsonEntry = (JSONObject) entry;
 				
 				vault = new XPVault();
-				//ExperienceShelves.log("type is " + jsonEntry.get("vault.locked").getClass().getName());
 				vault.setBlockX(((Long) jsonEntry.get("location.x")).intValue());
 				vault.setBlockY(((Long) jsonEntry.get("location.y")).intValue());
 				vault.setBlockZ(((Long) jsonEntry.get("location.z")).intValue());
@@ -98,15 +97,6 @@ public class JSONRepository implements IRepository<Location, XPVault> {
 			if (vaults.isEmpty())
 			{
 				ExperienceShelves.log("Set is empty after loading.");
-			} else {
-				Iterator<Entry<Location, XPVault>> it = vaults.entrySet().iterator();
-		    	
-		    	while (it.hasNext())
-		    	{
-		    		Entry<Location, XPVault> pairs = it.next();
-		    		ExperienceShelves.log("Balance: " + pairs.getValue().getRealBalance());
-		    	}
-				
 			}
 			
 		} catch (FileNotFoundException ex) {

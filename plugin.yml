@@ -9,7 +9,20 @@ database: false
 commands:
   xps:
     description: Lock the currently selected vault.
-    usage: /<command> lock |
-           /<command> balance
+    usage: |
+      /<command> lock 
+      /<command> balance
     permission: <plugin name>.lock
+    permission-message: You don't have <permission>
+  
+  lock:
+    description: Lock the vault directly infront of player.
+    usage: /xps <command>
+    permission: <plugin name>.lock
+    permission-message: You don't have <permission>
+    
+  balance:
+    description: Display the balance of vault directly infront of player.
+    usage: /xps <command>
+    permission: <plugin name>.balance
     permission-message: You don't have <permission>

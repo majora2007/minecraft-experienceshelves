@@ -2,6 +2,7 @@ package com.majora.minecraft.experienceshelves;
 
 import java.util.logging.Logger;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -65,7 +66,7 @@ public final class ExperienceShelves extends JavaPlugin {
 		{
 			if (!(sender instanceof Player))
 			{
-				sender.sendMessage("This command can only be run by a player.");
+				sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
 				return true;
 			}
 			
@@ -74,12 +75,12 @@ public final class ExperienceShelves extends JavaPlugin {
 				if (args[0].equalsIgnoreCase("lock"))
 				{
 					handleLockCmd(sender);
+					return true;
 				} else if (args[0].equalsIgnoreCase("balance"))
 				{
 					handleBalanceCmd(sender);
+					return true;
 				}
-				
-				return true;
 			}
 		}
 		
@@ -95,7 +96,7 @@ public final class ExperienceShelves extends JavaPlugin {
 		{
 			vault.setLocked(!vault.isLocked());
 			final String lockState = vault.isLocked() ? "locked" : "unlocked";
-			sender.sendMessage("Vault is now " + lockState);
+			sender.sendMessage(ChatColor.GREEN + "Vault is now " + ChatColor.GOLD + lockState);
 		}
 	}
 	
@@ -106,7 +107,7 @@ public final class ExperienceShelves extends JavaPlugin {
 		
 		if (vault != null) // getValidVaultInView handles error messages.
 		{
-			sender.sendMessage("Vault has a balance of " + vault.toString() + " xp.");
+			sender.sendMessage(ChatColor.DARK_PURPLE + "Vault has a balance of " + ChatColor.GOLD + vault.toString()+ ChatColor.DARK_PURPLE + " xp.");
 		}
 	}
 
@@ -129,10 +130,10 @@ public final class ExperienceShelves extends JavaPlugin {
 			{
 				return vault;
 			} else {
-				sender.sendMessage("You cannot interact with a vault you do not own.");
+				sender.sendMessage(ChatColor.RED + "You cannot interact with a vault you do not own.");
 			}
 		} else {
-			sender.sendMessage("That is not a valid vault.");
+			sender.sendMessage(ChatColor.RED + "That is not a vault.");
 		}
 		
 		return null;
