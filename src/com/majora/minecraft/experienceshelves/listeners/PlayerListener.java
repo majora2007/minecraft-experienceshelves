@@ -70,12 +70,17 @@ public class PlayerListener implements Listener {
 					if (accessedVault.getMode() == 0) // Store mode
 					{
 						accessedVault.setBalance(totalXp);
+						player.sendMessage("Added " + totalXp + " to vault.");
+						player.setExp(0.0f);
+						player.setLevel(0);
+						
 						// Clear player's xp level
-					} else if (accessedVault.getMode() == 1) // Withdraw mode
+					} else if (accessedVault.getMode() == 1 && accessedVault.getBalance() > 0) // Withdraw mode
 					{
 						// We need to worry about overflow here. If player has xp amt which
 						// is > MAX - vault's xp, an overflow will happen (thus xp loss).
 						// We should keep leftover xp.
+						final int startingBalance = accessedVault.getBalance();
 						
 						int leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
 						
@@ -91,25 +96,29 @@ public class PlayerListener implements Listener {
 						} else {
 							// There is no leftover, so just add the balance to the user
 							int tempBalance = accessedVault.getBalance();
-							while (tempBalance >= player.getExpToLevel())
+							do
 							{
 								int currentLevel = player.getLevel();
 								tempBalance -= player.getExpToLevel();
 								player.setLevel(currentLevel+1);
-							}
+							} while (tempBalance >= player.getExpToLevel());
+							
 							
 							// At this point tempBalance is less than next level, so we calculate the percentage till next level, 
 							// and set it.
-							float percentage = tempBalance / player.getExpToLevel();
-							player.setExp(percentage);
+							final float percentage = (tempBalance*1.0f) / (player.getExpToLevel()*1.0f);
+							ExperienceShelves.log("Percentage: " + percentage);
 							
+							// If we give player percentage, then our vault is empty. 
+							player.setExp(percentage);
 							accessedVault.setBalance(0);
-							accessedVault.setMode(1);
 						}
 						
-						player.sendMessage(accessedVault.getBalance() - MAX_EXP + " has been withdraw.");
-						player.sendMessage("You have a leftover balance of: " + accessedVault.getBalance() + " xp.");
+						player.sendMessage(startingBalance - accessedVault.getBalance() + " has been withdraw.");
+						accessedVault.setMode((accessedVault.getMode() == 1) ? 0 : 1);
 					}
+					
+					player.sendMessage("You have a leftover balance of: " + accessedVault.getBalance() + " xp.");
 				}
 				
 				
@@ -138,7 +147,7 @@ public class PlayerListener implements Listener {
 		
 		int totalXp = 0;
 		
-		if (currentLevel <= 15)
+		if (currentLevel < 15)
 		{
 			// There is a staic 17 xp between levels
 			// The reason for times 100 / 100 is to eliminate floating point errors without causing a huge loss of xp. We only care about 2 decimal points.
