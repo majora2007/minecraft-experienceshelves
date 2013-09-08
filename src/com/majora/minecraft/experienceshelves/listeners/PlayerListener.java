@@ -146,9 +146,13 @@ public class PlayerListener implements Listener {
 		
 		ExperienceShelves.log("Handling Normal Withdraw");
 		
-		// There is no leftover, so just add the balance to the user
 		int tempBalance = accessedVault.getBalance();
+		final int currentProgress = calculateTotalXPForLevelProgress(player);
 		
+		//ExperienceShelves.log("Balance: " + tempBalance + " Player XP: " + player.getExp());
+		//ExperienceShelves.log("Progress XP for level: " + currentProgress);
+		tempBalance += currentProgress;
+				
 		if (tempBalance >= player.getExpToLevel())
 		{
 			while (tempBalance > player.getExpToLevel())
@@ -159,7 +163,6 @@ public class PlayerListener implements Listener {
 			}
 		}
 		
-		
 		// At this point tempBalance is less than next level, so we calculate the percentage till next level, 
 		// and set it.
 		final float percentage = (tempBalance*1.0f) / (player.getExpToLevel()*1.0f);
@@ -167,8 +170,6 @@ public class PlayerListener implements Listener {
 		// If we give player percentage, then our vault is empty. 
 		player.setExp(percentage);
 		accessedVault.setBalance(0);
-		
-		ExperienceShelves.log("tempBalance: " + tempBalance + "  xp %: " + player.getExp());
 	}
 
 	private XPVault findOrCreateVault(final Player player,
@@ -177,7 +178,7 @@ public class PlayerListener implements Listener {
 		
 		if (repository.containsKey(blockLoc)) {
 			accessedVault = repository.get(clickedBlock.getLocation());
-			ExperienceShelves.log("Repository found existing Vault(" + accessedVault.getBalance() + ").");
+			//ExperienceShelves.log("Repository found existing Vault(" + accessedVault.getBalance() + ").");
 			// TODO: Perform extra check here to make sure Block is still a valid vault
 			
 			
@@ -205,7 +206,7 @@ public class PlayerListener implements Listener {
 	private int calcTotalXp(final Player player) 
 	{
 		final int currentLevel = player.getLevel();
-		final int progressXP = calculateTotalXPForLevel(player);
+		final int progressXP = calculateTotalXPForLevelProgress(player);
 
 		int totalXp = 0;
 		
@@ -232,7 +233,7 @@ public class PlayerListener implements Listener {
 	 * @param player
 	 * @return
 	 */
-	private int calculateTotalXPForLevel(final Player player) 
+	private int calculateTotalXPForLevelProgress(final Player player) 
 	{
 		final float currentExpPerent = player.getExp();
 		player.setExp(0.0f);
