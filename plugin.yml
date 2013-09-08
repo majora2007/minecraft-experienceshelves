@@ -5,3 +5,10 @@ main: com.majora.minecraft.experienceshelves.ExperienceShelves
 description: DESCRIPTION OF PLUGIN
 author: majora2007
 database: false
+
+commands:
+  xps:
+    description: Lock the currently selected vault.
+    usage: /<command> lock
+    permission: <plugin name>.lock
+    permission-message: You don't have <permission>

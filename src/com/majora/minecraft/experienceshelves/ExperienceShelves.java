@@ -3,6 +3,10 @@ package com.majora.minecraft.experienceshelves;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,9 +38,6 @@ public final class ExperienceShelves extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(this.playerListener, this);
 		
 		repository.load();
-		
-		//PluginDescriptionFile pluginDescriptionFile = getDescription();
-		//ExperienceShelves.log("Enabling " + pluginDescriptionFile.getName() + " v" + pluginDescriptionFile.getVersion());
 	}
 	
 	@Override
@@ -45,7 +46,7 @@ public final class ExperienceShelves extends JavaPlugin {
 		
 		repository.save();
 		
-		ExperienceShelves.log("ExperienceShelves has been disabled");
+		//ExperienceShelves.log("ExperienceShelves has been disabled");
 	}
 	
 	private void initializeLoggerPrefix()
@@ -57,5 +58,32 @@ public final class ExperienceShelves extends JavaPlugin {
 	public static void log(final String msg)
 	{
 		ExperienceShelves.consoleLogger.info(pluginLogPrefix + msg);
+	}
+	
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) 
+	{
+		if (cmd.getName().equalsIgnoreCase("xps"))
+		{
+			if (args.length == 1 && args[0].equalsIgnoreCase("lock"))
+			{
+				if (!(sender instanceof Player))
+				{
+					sender.sendMessage("This command can only be run by a player.");
+				} else {
+					Player player = (Player) sender;
+					Block targetedBlock = player.getTargetBlock(null, 5);
+					if (repository.containsKey(targetedBlock.getLocation()))
+					{
+						final XPVault vault = repository.get(targetedBlock.getLocation());
+						vault.setLocked(!vault.isLocked());
+						final String lockState = vault.isLocked() ? "locked" : "unlocked";
+						sender.sendMessage("Vault is now " + lockState);
+					}
+				}
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }
