@@ -1,5 +1,7 @@
 package com.majora.minecraft.experienceshelves.listeners;
 
+import java.text.NumberFormat;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -96,19 +98,17 @@ public class PlayerListener implements Listener {
 
 	private boolean isPlayerHandEmpty(PlayerInteractEvent event) {
 		ItemStack item = event.getPlayer().getItemInHand();
-		return item == null || item.getTypeId() == 0 || item.getAmount() == 0;
+		return item == null || item.getType() == Material.AIR || item.getAmount() == 0;
 	}
 
 	private void handleStoreXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
 		
-		//ExperienceShelves.log("player xp %: " + player.getExp());
-		
 		// You don't set balance, but add to balance
-		accessedVault.setBalance(accessedVault.getRealBalance() + totalXp);
+		accessedVault.addBalance(totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
-		player.sendMessage("Added " + totalXp + " to vault.");
+		player.sendMessage("Added " + NumberFormat.getInstance().format(totalXp) + " to vault.");
 	}
 
 	// We need to worry about overflow here. If player has xp amt which
@@ -180,7 +180,6 @@ public class PlayerListener implements Listener {
 			accessedVault = repository.get(clickedBlock.getLocation());
 			//ExperienceShelves.log("Repository found existing Vault(" + accessedVault.getBalance() + ").");
 			// TODO: Perform extra check here to make sure Block is still a valid vault
-			
 			
 		} else {
 			ExperienceShelves.log("Creating new Vault.");
