@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -61,6 +62,7 @@ public final class ExperienceShelves extends JavaPlugin {
 	}
 	
 	// NOTE: BUG: This doesn't always get called when xps lock is called.
+	@EventHandler
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) 
 	{
 		if (cmd.getName().equalsIgnoreCase("xps"))

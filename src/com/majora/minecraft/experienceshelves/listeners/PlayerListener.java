@@ -34,12 +34,6 @@ public class PlayerListener implements Listener {
 		this.repository = repo;
 	}
 	
-	@EventHandler
-	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event)
-	{}
-	
-	
-	
 	
 	@EventHandler
 	public void onPlayerClick(PlayerInteractEvent event)
@@ -59,7 +53,6 @@ public class PlayerListener implements Listener {
 			if (!isPlayerVaultOwner(player, accessedVault)) return;
 			
 			if (accessedVault.isLocked()) {
-				// Tell player they must unlock before they interact
 				player.sendMessage("You must unlock the vault before you can interact.");
 				return;
 			}
@@ -74,7 +67,6 @@ public class PlayerListener implements Listener {
 				}
 			} else if (isLeftClick(event) && isPlayerHandEmpty(event))
 			{
-				// Store XP here only
 				if (playerCanStore(totalXp))
 				{
 					handleStoreXP(player, totalXp, accessedVault);
@@ -110,8 +102,9 @@ public class PlayerListener implements Listener {
 	private void handleStoreXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
 		
+		//ExperienceShelves.log("player xp %: " + player.getExp());
+		
 		// You don't set balance, but add to balance
-		//accessedVault.setBalance(totalXp);
 		accessedVault.setBalance(accessedVault.getRealBalance() + totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
@@ -149,8 +142,6 @@ public class PlayerListener implements Listener {
 		accessedVault.setBalance(Math.abs(leftoverXp));
 	}
 
-	// BUG: There is a bug here in which percentage is not getting set.
-	// BUG: Sometimes xp will clear?
 	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) {
 		
 		ExperienceShelves.log("Handling Normal Withdraw");
@@ -175,9 +166,9 @@ public class PlayerListener implements Listener {
 		
 		// If we give player percentage, then our vault is empty. 
 		player.setExp(percentage);
-		accessedVault.setBalance(0); // NOTE: You can set to 0 as we are guarenteed that vault does not have more xp than can be withdrawn.
+		accessedVault.setBalance(0);
 		
-		//ExperienceShelves.log("tempBalance: " + tempBalance + "  xp %: " + player.getExp());
+		ExperienceShelves.log("tempBalance: " + tempBalance + "  xp %: " + player.getExp());
 	}
 
 	private XPVault findOrCreateVault(final Player player,
@@ -211,30 +202,44 @@ public class PlayerListener implements Listener {
 	}
 
 	//http://www.minecraftwiki.net/wiki/Experience
-	// BUG: I have an off by one calc bug in here.
-	private int calcTotalXp(final Player player) {
-		final float expPercent = player.getExp();
-		final int expToNextLevel = player.getExpToLevel();
+	private int calcTotalXp(final Player player) 
+	{
 		final int currentLevel = player.getLevel();
-		
+		final int progressXP = calculateTotalXPForLevel(player);
+
 		int totalXp = 0;
 		
 		if (currentLevel < 15)
 		{
-			// There is a staic 17 xp between levels
-			// The reason for times c / c is to eliminate floating point errors without causing a huge loss of xp. We only care about 2 decimal points.
-			totalXp = currentLevel * 17 + ( (int) (expPercent*10000000) * expToNextLevel) / 10000000;
-		} else if (currentLevel <= 30)
+			int baseLvlXp = currentLevel * 17;
+			totalXp = baseLvlXp + progressXP;
+		} else if (currentLevel < 30)
 		{
 			float baseLvlXp = ((1.5f * (currentLevel * currentLevel)) - (29.5f * currentLevel) + 360);
-			totalXp = (int) (baseLvlXp + ( (int) (expPercent*10000000) * expToNextLevel) / 10000000);
-		} else if (currentLevel >= 31)
+			totalXp = (int) (baseLvlXp + progressXP);
+		} else if (currentLevel >= 30)
 		{
 			float baseLvlXp = ((3.5f * (currentLevel * currentLevel)) - (151.5f * currentLevel) + 2220);
-			totalXp = (int) (baseLvlXp + ( (int) (expPercent*10000000) * expToNextLevel) / 10000000);
+			totalXp = (int) (baseLvlXp + progressXP);
 		}
 		
 		return totalXp;
+	}
+
+
+	/**
+	 * Calculate the totalXP for the current level player is at.
+	 * @param player
+	 * @return
+	 */
+	private int calculateTotalXPForLevel(final Player player) 
+	{
+		final float currentExpPerent = player.getExp();
+		player.setExp(0.0f);
+		int totalXpForLevel = player.getExpToLevel();
+		player.setExp(currentExpPerent);
+		
+		return (int) Math.ceil(currentExpPerent * totalXpForLevel);
 	}
 
 	private boolean isRightClick( PlayerInteractEvent event )

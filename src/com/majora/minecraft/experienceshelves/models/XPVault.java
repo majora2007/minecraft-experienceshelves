@@ -7,7 +7,19 @@ import javax.swing.text.NumberFormatter;
 import org.bukkit.Material;
 
 /**
- * XPVault represents a vault of xp. 
+ * XPVault represents a vault for experience. The vault contains all the information needed to represent it in 
+ * a Mineraft World.  The fields are as following:
+ * <ul>
+ * <li>long balance: the xp in the vault. Minecraft is limited to a char so we provide two methods for this. </li>
+ * <li>bool locked: whether a player can interact with a vault.</li>
+ * <li>String ownerName: The owning player's Minecraft Account name.</li>
+ * <li>int block x,y,z: The x,y,z coordinate position of the vault block.</li>
+ * <li>String worldName: The Minecraft world name where block is. This is needed as multi-worlds are common.</li>
+ * </ul>
+ * 
+ * 
+ * 
+ * 
  * @author Joseph
  *
  */
@@ -24,7 +36,7 @@ public class XPVault {
 	 * We also need to take permissions into account as in order to lock a vault, we must type a command, so 
 	 * we should have permissions.
 	 * 
-	 * Commands: 
+	 * Permissions: 
 	 * 	lock - user can lock their shelves
 	 * break - user can break ANY shelves
 	 * store - user can store xp in shelves
@@ -39,20 +51,13 @@ public class XPVault {
 	 * the meta-data at reload/enable. I think for the first, we should stick to keeping it only in JSON.
 	 */
 	
-	// Current balance of the vault (xp). 
-	// NOTE: Minecraft uses char (16-bit) to store total xp, 
-	// however, we can use a long so that a vault can hold lots of xp at a time
 	private long balance = 0; 
+	private String ownerName = null;
 	
-	// Now we need some information describing Minecraft Block and Player who owns it.
-	private String ownerName = null; // In order to locate a Player on a server, we only need the account name.
-	
-	// For location, I need x, y, z, block type, and name of world
 	private String worldName = null;
 	private int blockX = 0, blockY = 0, blockZ = 0;
 	private Material blockMaterial = null;
 	
-	// Lastly we need to maintain optional variables which manage control
 	private boolean locked = false;
 	
 	public XPVault() {}
@@ -65,8 +70,25 @@ public class XPVault {
 		return balance;
 	}
 
-	public void setBalance(long balance) {
-		this.balance = balance;
+	/**
+	 * Set the balance of the vault.
+	 * <p>
+	 * This performs overflow/underflow checks. Note that the minimum of balance is 0.
+	 * </p>
+	 * @param balance
+	 */
+	public void setBalance(final long balance) {
+		
+		if (balance > Long.MAX_VALUE)
+		{
+			this.balance = Long.MAX_VALUE;
+		} else if (balance < 0 ) 
+		{
+			this.balance = 0;
+		} else 
+		{
+			this.balance = balance;
+		}
 	}
 
 	public String getOwnerName() {
@@ -125,12 +147,29 @@ public class XPVault {
 		this.locked = locked;
 	}
 	
+	/**
+	 * Helper method to add to current balance.
+	 * @param balance
+	 */
+	public void addBalance(final long balance)
+	{
+		setBalance(this.balance + balance);
+		
+	}
+	
+	/**
+	 * Helper method to subtract from current balance.
+	 * @param balance
+	 */
+	public void subtractFromBalance(final long balance)
+	{
+		setBalance(this.balance - balance);
+		
+	}
+	
 	@Override
 	public String toString() {
 		return NumberFormat.getInstance().format(this.balance);
 		
 	}
-	
-	
-
 }
