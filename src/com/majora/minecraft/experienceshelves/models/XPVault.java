@@ -2,8 +2,6 @@ package com.majora.minecraft.experienceshelves.models;
 
 import java.text.NumberFormat;
 
-import javax.swing.text.NumberFormatter;
-
 import org.bukkit.Material;
 
 /**
