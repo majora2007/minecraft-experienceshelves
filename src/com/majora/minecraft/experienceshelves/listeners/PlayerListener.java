@@ -44,14 +44,13 @@ public class PlayerListener implements Listener {
 			{
 				final Player player = event.getPlayer();
 				
-				final int totalXp = calcTotalXp(player);
+				final long totalXp = calcTotalXp(player);
 				final Block clickedBlock = event.getClickedBlock();
 				
 				// Let's pull out the essential info from Block
 				final Location blockLoc = clickedBlock.getLocation();
 				
-				XPVault accessedVault = findOrCreateVault(player, totalXp,
-						clickedBlock, blockLoc);
+				XPVault accessedVault = findOrCreateVault(player, clickedBlock, blockLoc);
 				
 				assert(accessedVault != null);
 				
@@ -70,7 +69,7 @@ public class PlayerListener implements Listener {
 						handleWithdrawXP(player, totalXp, accessedVault);
 					}
 					
-					player.sendMessage("You have a leftover balance of: " + accessedVault.getBalance() + " xp.");
+					player.sendMessage("You have a leftover balance of: " + accessedVault.toString() + " xp.");
 					accessedVault.setMode((accessedVault.getMode() == 1) ? 0 : 1);
 					
 					String mode = (accessedVault.getMode() == 1) ? "WITHDRAW" : "STORE";
@@ -80,7 +79,7 @@ public class PlayerListener implements Listener {
 		}
 	}
 
-	private void handleStoreXP(final Player player, final int totalXp,
+	private void handleStoreXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
 		accessedVault.setBalance(totalXp);
 		player.sendMessage("Added " + totalXp + " to vault.");
@@ -91,11 +90,11 @@ public class PlayerListener implements Listener {
 	// We need to worry about overflow here. If player has xp amt which
 	// is > MAX - vault's xp, an overflow will happen (thus xp loss).
 	// We should keep leftover xp.
-	private void handleWithdrawXP(final Player player, final int totalXp,
+	private void handleWithdrawXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
 		final int startingBalance = accessedVault.getBalance();
 		
-		int leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
+		final long leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
 		
 		if ( leftoverXp < 0)
 		{
@@ -107,8 +106,8 @@ public class PlayerListener implements Listener {
 		player.sendMessage(startingBalance - accessedVault.getBalance() + " has been withdraw.");
 	}
 
-	private void handleOverflowWithdraw(final Player player,
-			XPVault accessedVault, int leftoverXp) {
+	private void handleOverflowWithdraw(final Player player, 
+			final XPVault accessedVault, final long leftoverXp) {
 		// There is leftover, so let's take abs value and store into vault
 		player.setExp(1.0f);
 		player.setLevel(MAX_LEVEL);
@@ -117,8 +116,7 @@ public class PlayerListener implements Listener {
 		accessedVault.setMode(0);
 	}
 
-	private void handleRegularWithdraw(final Player player,
-			XPVault accessedVault) {
+	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) {
 		// There is no leftover, so just add the balance to the user
 		int tempBalance = accessedVault.getBalance();
 		do
@@ -138,7 +136,7 @@ public class PlayerListener implements Listener {
 		accessedVault.setBalance(0);
 	}
 
-	private XPVault findOrCreateVault(final Player player, final int totalXp,
+	private XPVault findOrCreateVault(final Player player,
 			final Block clickedBlock, final Location blockLoc) {
 		XPVault accessedVault;
 		if (vaults.containsKey(blockLoc)) {
@@ -147,13 +145,13 @@ public class PlayerListener implements Listener {
 			// TODO: Perform extra check here to make sure Block is still a valid vault
 			
 		} else {
-			accessedVault = createXPVault(clickedBlock, player, totalXp);
+			accessedVault = createXPVault(clickedBlock, player);
 			vaults.put(clickedBlock.getLocation(), accessedVault);
 		}
 		return accessedVault;
 	}
 	
-	private XPVault createXPVault(Block clickedBlock, Player player, int totalXp) {
+	private XPVault createXPVault(final Block clickedBlock, final Player player) {
 		XPVault vault = new XPVault();
 		vault.setBlockMaterial(clickedBlock.getType());
 		vault.setBlockX(clickedBlock.getX());
@@ -161,13 +159,13 @@ public class PlayerListener implements Listener {
 		vault.setBlockZ(clickedBlock.getZ());
 		vault.setWorldName(clickedBlock.getWorld().getName());
 		vault.setOwnerName(player.getName());
-		//vault.setBalance(totalXp); // We do this only after we confirm mode
 		
 		return vault;
 	}
 
 	//http://www.minecraftwiki.net/wiki/Experience
-	private int calcTotalXp(Player player) {
+	// BUG: I have an off by one calc bug in here.
+	private int calcTotalXp(final Player player) {
 		final float expPercent = player.getExp();
 		final int expToNextLevel = player.getExpToLevel();
 		final int currentLevel = player.getLevel();

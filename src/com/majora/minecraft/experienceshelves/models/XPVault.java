@@ -1,5 +1,9 @@
 package com.majora.minecraft.experienceshelves.models;
 
+import java.text.NumberFormat;
+
+import javax.swing.text.NumberFormatter;
+
 import org.bukkit.Material;
 
 /**
@@ -37,7 +41,10 @@ public class XPVault {
 	
 	private int mode = 0; // TODO: Refactor to Enum for STORE/WITHDRAW
 	
-	private int balance = 0; // Current balance of the vault (xp).
+	// Current balance of the vault (xp). 
+	// NOTE: Minecraft uses char (16-bit) to store total xp, 
+	// however, we can use a long so that a vault can hold lots of xp at a time
+	private long balance = 0; 
 	
 	// Now we need some information describing Minecraft Block and Player who owns it.
 	private String ownerName = null; // In order to locate a Player on a server, we only need the account name.
@@ -61,10 +68,14 @@ public class XPVault {
 	}
 
 	public int getBalance() {
+		return (int) balance;
+	}
+	
+	public long getRealBalance() {
 		return balance;
 	}
 
-	public void setBalance(int balance) {
+	public void setBalance(long balance) {
 		this.balance = balance;
 	}
 
@@ -122,6 +133,12 @@ public class XPVault {
 
 	public void setLocked(boolean locked) {
 		this.locked = locked;
+	}
+	
+	@Override
+	public String toString() {
+		return NumberFormat.getInstance().format(this.balance);
+		
 	}
 	
 	
