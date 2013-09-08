@@ -13,13 +13,15 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
+import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
 
 public class PlayerListener implements Listener {
 	
 	private ExperienceShelves plugin;
+	private IRepository<Location, XPVault> repository;
 	
-	private Map<Location, XPVault> vaults;
+	//private Map<Location, XPVault> vaults;
 	
 	// NOTE: It looks like xp is store internally as a char, meaning max xp is 
 	// 65,635
@@ -27,10 +29,11 @@ public class PlayerListener implements Listener {
 	final int MAX_LEVEL = 159;
 	
 	
-	public PlayerListener(ExperienceShelves instance) {
+	public PlayerListener(ExperienceShelves instance, IRepository<Location, XPVault> repo) {
 		this.plugin = instance;
 		
-		vaults = new HashMap<Location, XPVault>();
+		//vaults = new HashMap<Location, XPVault>();
+		this.repository = repo;
 	}
 	
 	@EventHandler
@@ -139,14 +142,15 @@ public class PlayerListener implements Listener {
 	private XPVault findOrCreateVault(final Player player,
 			final Block clickedBlock, final Location blockLoc) {
 		XPVault accessedVault;
-		if (vaults.containsKey(blockLoc)) {
-			accessedVault = vaults.get(clickedBlock.getLocation());
+		
+		if (repository.containsKey(blockLoc)) {
+			accessedVault = repository.get(clickedBlock.getLocation());
 			
 			// TODO: Perform extra check here to make sure Block is still a valid vault
 			
 		} else {
 			accessedVault = createXPVault(clickedBlock, player);
-			vaults.put(clickedBlock.getLocation(), accessedVault);
+			repository.put(clickedBlock.getLocation(), accessedVault);
 		}
 		return accessedVault;
 	}

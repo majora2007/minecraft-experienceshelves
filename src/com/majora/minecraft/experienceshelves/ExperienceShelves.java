@@ -1,6 +1,5 @@
 package com.majora.minecraft.experienceshelves;
 
-import java.util.HashMap;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -28,11 +27,11 @@ public final class ExperienceShelves extends JavaPlugin {
         
 		initializeLoggerPrefix();
 		
-		this.playerListener = new com.majora.minecraft.experienceshelves.listeners.PlayerListener(this);
-		getServer().getPluginManager().registerEvents(this.playerListener, this);
-		
 		final String vaultsFilePath = "" + this.getDataFolder() + "\\vaults.JSON";
-		repository = new JSONRepository<Location, XPVault>(vaultsFilePath);
+		repository = new JSONRepository(vaultsFilePath);
+		
+		this.playerListener = new com.majora.minecraft.experienceshelves.listeners.PlayerListener(this, repository);
+		getServer().getPluginManager().registerEvents(this.playerListener, this);
 
 		
 		ExperienceShelves.log("ExperienceShelves has been enabled");
@@ -41,6 +40,9 @@ public final class ExperienceShelves extends JavaPlugin {
 	@Override
 	public void onDisable() 
 	{
+		
+		repository.save();
+		
 		ExperienceShelves.log("ExperienceShelves has been disabled");
 	}
 	
