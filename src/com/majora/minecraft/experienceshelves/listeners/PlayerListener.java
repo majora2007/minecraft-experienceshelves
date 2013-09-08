@@ -1,16 +1,24 @@
 package com.majora.minecraft.experienceshelves.listeners;
 
 import java.text.NumberFormat;
+import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
+import org.bukkit.plugin.Plugin;
 
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
 import com.majora.minecraft.experienceshelves.models.IRepository;
@@ -24,7 +32,7 @@ public class PlayerListener implements Listener {
 	// NOTE: It looks like xp is store internally as a char, meaning max xp is 
 	// 65,635
 	final int MAX_EXP = 65635;
-	final int MAX_LEVEL = 159;
+	final int MAX_LEVEL = 160; // With progress of 0.0%
 	
 	
 	public PlayerListener(ExperienceShelves instance, IRepository<Location, XPVault> repo) {
@@ -35,8 +43,33 @@ public class PlayerListener implements Listener {
 	
 	
 	@EventHandler
+	public void onBlockBreak(BlockBreakEvent event)
+	{
+		if (event.isCancelled()) return;
+
+		
+		final Block block = event.getBlock();
+		if (repository.containsKey(block.getLocation()))
+		{
+			XPVault vault = repository.get(block.getLocation());
+			if (vault.getOwnerName().equals(event.getPlayer().getName()))
+			{
+				// Destroy block and remove from IRepository (no-metadata method)
+				repository.remove(block.getLocation());
+				repository.save(); // Save after we remove (TODO: Profile save and load method)
+			} else {
+				event.getPlayer().sendMessage(ExperienceShelves.prefix + "You cannot break someone else's vault.");
+				event.setCancelled(true);
+			}
+		}
+	}
+	
+	
+	@EventHandler
 	public void onPlayerClick(PlayerInteractEvent event)
 	{
+		if (event.isCancelled()) return;
+		
 		if(!event.hasBlock()) return;
 		
 		final Player player = event.getPlayer();
@@ -52,7 +85,7 @@ public class PlayerListener implements Listener {
 			if (!isPlayerVaultOwner(player, accessedVault)) return;
 			
 			if (accessedVault.isLocked()) {
-				player.sendMessage("You must unlock the vault before you can interact.");
+				player.sendMessage(ExperienceShelves.prefix + "You must unlock the vault before you can interact.");
 				return;
 			}
 			
@@ -62,7 +95,7 @@ public class PlayerListener implements Listener {
 				{
 					handleWithdrawXP(player, totalXp, accessedVault);
 				} else {
-					player.sendMessage("The vault is empty.");
+					player.sendMessage(ExperienceShelves.prefix + "The vault is empty.");
 				}
 			} else if (isLeftClick(event) && isPlayerHandEmpty(event))
 			{
@@ -70,7 +103,7 @@ public class PlayerListener implements Listener {
 				{
 					handleStoreXP(player, totalXp, accessedVault);
 				} else {
-					player.sendMessage("You have no xp to store.");
+					player.sendMessage(ExperienceShelves.prefix + "You have no xp to store.");
 				}
 			}
 		} 
@@ -103,12 +136,9 @@ public class PlayerListener implements Listener {
 		accessedVault.addBalance(totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
-		player.sendMessage("Added " + NumberFormat.getInstance().format(totalXp) + " to vault.");
+		player.sendMessage(ExperienceShelves.prefix + "Added " + NumberFormat.getInstance().format(totalXp) + " to vault.");
 	}
 
-	// We need to worry about overflow here. If player has xp amt which
-	// is > MAX - vault's xp, an overflow will happen (thus xp loss).
-	// We should keep leftover xp.
 	private void handleWithdrawXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
 		
@@ -122,7 +152,6 @@ public class PlayerListener implements Listener {
 			handleRegularWithdraw(player, accessedVault);
 		}
 		
-		// BUG: This is not displaying an accurate amount of xp that was withdrawn.
 		player.sendMessage(NumberFormat.getInstance().format(startingBalance - accessedVault.getRealBalance()) + " has been withdrawn.");
 	}
 
@@ -134,24 +163,21 @@ public class PlayerListener implements Listener {
 
 	private void handleOverflowWithdraw(final Player player, final XPVault accessedVault) {
 		
-		ExperienceShelves.log("Handling Overflow Withdraw");
+		//ExperienceShelves.log("Handling Overflow Withdraw");
 		player.setExp(0.0f);
-		player.setLevel(MAX_LEVEL+1);
+		player.setLevel(MAX_LEVEL);
 		
 		accessedVault.subtractFromBalance(MAX_EXP);
 	}
 
 	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) {
 		
-		ExperienceShelves.log("Handling Normal Withdraw");
+		//ExperienceShelves.log("Handling Normal Withdraw");
 		
 		int tempBalance = accessedVault.getBalance();
 		final int currentProgress = calculateTotalXPForLevelProgress(player);
 		
-		//ExperienceShelves.log("Balance: " + tempBalance + " Player XP: " + player.getExp());
-		//ExperienceShelves.log("Progress XP for level: " + currentProgress);
-		tempBalance += currentProgress;
-				
+		tempBalance += currentProgress;	
 		if (tempBalance >= player.getExpToLevel())
 		{
 			while (tempBalance > player.getExpToLevel())
@@ -179,6 +205,7 @@ public class PlayerListener implements Listener {
 			accessedVault = repository.get(clickedBlock.getLocation());
 			//ExperienceShelves.log("Repository found existing Vault(" + accessedVault.getBalance() + ").");
 			// TODO: Perform extra check here to make sure Block is still a valid vault
+			// NOTE: This can occur when a user moves the vault. 
 			
 		} else {
 			ExperienceShelves.log("Creating new Vault.");
@@ -248,7 +275,28 @@ public class PlayerListener implements Listener {
 	
 	private boolean isClickedBlockXPVault( PlayerInteractEvent event )
 	{
-		return event.getClickedBlock().getType() == Material.BOOKSHELF;
+		return event.getClickedBlock().getType() == Material.BOOKSHELF && isPlayerHandEmpty(event);
+	}
+	
+	@SuppressWarnings("unused")
+	private void setMetadata(Block block, String key, Object value, Plugin plugin)
+	{
+		block.setMetadata(key, new FixedMetadataValue(plugin, value));
+	}
+	
+	@SuppressWarnings("unused")
+	private Object getMetadata(Block block, String key, Plugin plugin)
+	{
+		List<MetadataValue> values = block.getMetadata(key);
+		for(MetadataValue value : values)
+		{
+			if (value.getOwningPlugin().getDescription().getName().equals(plugin.getDescription().getName()))
+			{
+				return value.value();
+			}
+		}
+		
+		return null;
 	}
 
 }

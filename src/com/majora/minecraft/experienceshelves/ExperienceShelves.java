@@ -19,7 +19,7 @@ import com.majora.minecraft.experienceshelves.models.XPVault;
 public final class ExperienceShelves extends JavaPlugin {
 	
 	private static Logger consoleLogger = Logger.getLogger("Minecraft");
-	private static String pluginLogPrefix;
+	public static String prefix;
 	
 	private PlayerListener playerListener;
 	private IRepository<Location, XPVault> repository;
@@ -35,7 +35,7 @@ public final class ExperienceShelves extends JavaPlugin {
 		final String vaultsFilePath = "" + this.getDataFolder() + "\\vaults.JSON";
 		repository = new JSONRepository(vaultsFilePath, getServer());
 		
-		this.playerListener = new com.majora.minecraft.experienceshelves.listeners.PlayerListener(this, repository);
+		this.playerListener = new PlayerListener(this, repository);
 		getServer().getPluginManager().registerEvents(this.playerListener, this);
 		
 		repository.load();
@@ -49,16 +49,15 @@ public final class ExperienceShelves extends JavaPlugin {
 	
 	private void initializeLoggerPrefix()
 	{
-		PluginDescriptionFile pluginDescriptionFile = getDescription();
-		pluginLogPrefix = "[" +  pluginDescriptionFile.getName() + "]: ";
+		final PluginDescriptionFile pluginDescriptionFile = getDescription();
+		prefix = "[" +  pluginDescriptionFile.getName() + "]: ";
 	}
-	
+
 	public static void log(final String msg)
 	{
-		ExperienceShelves.consoleLogger.info(pluginLogPrefix + msg);
+		ExperienceShelves.consoleLogger.info(prefix + msg);
 	}
 	
-	// NOTE: BUG: This doesn't always get called when xps lock is called.
 	@EventHandler
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) 
 	{

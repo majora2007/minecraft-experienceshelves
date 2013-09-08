@@ -20,43 +20,16 @@ import org.bukkit.Material;
  * 
  * 
  * 
- * @author Joseph
+ * @author Joseph Milazzo
  *
  */
 public class XPVault {
-	
-	/*
-	 * This is what I am thinking about in terms of data storage.
-	 * What I know we need is the location of the bookshelf, the player 
-	 * who 'owns' the shelf, and optional meta-data such as if the shelf is locked.
-	 * 
-	 * The location is tricky as there may be multiple worlds, so we should also store a world 
-	 * identifier.
-	 * 
-	 * We also need to take permissions into account as in order to lock a vault, we must type a command, so 
-	 * we should have permissions.
-	 * 
-	 * Permissions: 
-	 * 	lock - user can lock their shelves
-	 * break - user can break ANY shelves
-	 * store - user can store xp in shelves
-	 * withdraw - user can withdraw xp from shelves
-	 * 
-	 * The way MagicBookshelf worked was:
-	 * You right click to toggle between store and withdrawing.
-	 * You can place a sign with [XP_Private] and 3 usernames to lock a bookshelf to.
-	 * 
-	 * I also would like to address moving bookshelves. This can be handled where the user has to withdraw 
-	 * break, move, place, then store. Or, we can store xp in meta-data (with JSON backend) and just fill-in 
-	 * the meta-data at reload/enable. I think for the first, we should stick to keeping it only in JSON.
-	 */
-	
 	private long balance = 0; 
-	private String ownerName = null;
+	private String ownerName = "";
 	
 	private String worldName = null;
 	private int blockX = 0, blockY = 0, blockZ = 0;
-	private Material blockMaterial = null;
+	private Material blockMaterial = null; // JVM: Should I set this to AIR?
 	
 	private boolean locked = false;
 	
