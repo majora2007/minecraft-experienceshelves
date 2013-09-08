@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -34,50 +35,56 @@ public class PlayerListener implements Listener {
 	}
 	
 	@EventHandler
+	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event)
+	{}
+	
+	
+	
+	
+	@EventHandler
 	public void onPlayerClick(PlayerInteractEvent event)
 	{
 		if(!event.hasBlock()) return;
 		
-		if (isRightClick( event ) && isPlayerHandEmpty(event))
+		final Player player = event.getPlayer();
+		boolean changed = false;
+		
+		if (isClickedBlockXPVault( event ))
 		{
-			if (isClickedBlockXPVault( event ))
+			final long totalXp = calcTotalXp(player);
+			final Block clickedBlock = event.getClickedBlock();
+			final Location blockLoc = clickedBlock.getLocation();
+			
+			
+			final XPVault accessedVault = findOrCreateVault(player, clickedBlock, blockLoc);
+			if (!isPlayerVaultOwner(player, accessedVault)) return;
+			
+			if (accessedVault.isLocked()) {
+				// Tell player they must unlock before they interact
+				player.sendMessage("You must unlock the vault before you can interact.");
+				return;
+			}
+			
+			if (isRightClick( event ) && isPlayerHandEmpty(event))
 			{
-				final Player player = event.getPlayer();
-				final long totalXp = calcTotalXp(player);
-				final Block clickedBlock = event.getClickedBlock();
-				final Location blockLoc = clickedBlock.getLocation();
-				boolean changed = false;
-				
-				final XPVault accessedVault = findOrCreateVault(player, clickedBlock, blockLoc);
-				if (!isPlayerVaultOwner(player, accessedVault)) return;
-				
-				
-				// At this point, we can now check the mode and whether the vault is locked or not
-				if (accessedVault.isLocked()) {
-					// Tell player they must unlock before they interact
-					player.sendMessage("You must unlock the vault before you can interact.");
-					return;
-				} 
-				
-				
-				if (isVaultInStoreMode(accessedVault) && playerCanStore(totalXp)) // Store mode
+				handleWithdrawXP(player, totalXp, accessedVault);
+				changed = true;
+			} else if (isLeftClick(event) && isPlayerHandEmpty(event))
+			{
+				// Store XP here only
+				if (playerCanStore(totalXp))
 				{
 					handleStoreXP(player, totalXp, accessedVault);
 					changed = true;
-				} else if (isVaultInWithdrawMode(accessedVault) && canWithdrawFromVault(accessedVault)) // Withdraw mode
-				{
-					handleWithdrawXP(player, totalXp, accessedVault);
-					changed = true;
-				}
-				
-				accessedVault.setMode(isVaultInWithdrawMode(accessedVault) ? 0 : 1);
-				
-				if (changed)
-				{
-					player.sendMessage("New Balance: " + accessedVault.toString() + " xp.");
+				} else {
+					player.sendMessage("You have no xp to store.");
 				}
 			}
-		}
+		} 
+	}
+
+	private boolean isLeftClick(PlayerInteractEvent event) {
+		return event.getAction() == Action.LEFT_CLICK_BLOCK;
 	}
 
 	private boolean playerCanStore(final long totalXp) {
@@ -86,14 +93,6 @@ public class PlayerListener implements Listener {
 
 	private boolean canWithdrawFromVault(final XPVault accessedVault) {
 		return accessedVault.getBalance() > 0;
-	}
-
-	private boolean isVaultInWithdrawMode(final XPVault accessedVault) {
-		return accessedVault.getMode() == 1;
-	}
-
-	private boolean isVaultInStoreMode(final XPVault accessedVault) {
-		return accessedVault.getMode() == 0;
 	}
 
 	private boolean isPlayerVaultOwner(final Player player,
@@ -140,7 +139,6 @@ public class PlayerListener implements Listener {
 		player.setLevel(MAX_LEVEL);
 
 		accessedVault.setBalance(Math.abs(leftoverXp));
-		accessedVault.setMode(0);
 	}
 
 	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) {

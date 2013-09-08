@@ -39,8 +39,6 @@ public class XPVault {
 	 * the meta-data at reload/enable. I think for the first, we should stick to keeping it only in JSON.
 	 */
 	
-	private int mode = 0; // TODO: Refactor to Enum for STORE/WITHDRAW
-	
 	// Current balance of the vault (xp). 
 	// NOTE: Minecraft uses char (16-bit) to store total xp, 
 	// however, we can use a long so that a vault can hold lots of xp at a time
@@ -58,14 +56,6 @@ public class XPVault {
 	private boolean locked = false;
 	
 	public XPVault() {}
-
-	public int getMode() {
-		return mode;
-	}
-
-	public void setMode(int mode) {
-		this.mode = mode;
-	}
 
 	public int getBalance() {
 		return (int) balance;
