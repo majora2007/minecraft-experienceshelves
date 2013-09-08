@@ -1,8 +1,5 @@
 package com.majora.minecraft.experienceshelves.listeners;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -33,7 +30,6 @@ public class PlayerListener implements Listener {
 	public PlayerListener(ExperienceShelves instance, IRepository<Location, XPVault> repo) {
 		this.plugin = instance;
 		
-		//vaults = new HashMap<Location, XPVault>();
 		this.repository = repo;
 	}
 	
@@ -50,6 +46,7 @@ public class PlayerListener implements Listener {
 				final long totalXp = calcTotalXp(player);
 				final Block clickedBlock = event.getClickedBlock();
 				final Location blockLoc = clickedBlock.getLocation();
+				boolean changed = false;
 				
 				final XPVault accessedVault = findOrCreateVault(player, clickedBlock, blockLoc);
 				if (!isPlayerVaultOwner(player, accessedVault)) return;
@@ -66,16 +63,19 @@ public class PlayerListener implements Listener {
 				if (isVaultInStoreMode(accessedVault) && playerCanStore(totalXp)) // Store mode
 				{
 					handleStoreXP(player, totalXp, accessedVault);
+					changed = true;
 				} else if (isVaultInWithdrawMode(accessedVault) && canWithdrawFromVault(accessedVault)) // Withdraw mode
 				{
 					handleWithdrawXP(player, totalXp, accessedVault);
+					changed = true;
 				}
 				
-				player.sendMessage("New Balance: " + accessedVault.toString() + " xp.");
 				accessedVault.setMode(isVaultInWithdrawMode(accessedVault) ? 0 : 1);
 				
-				//String mode = isVaultInWithdrawMode(accessedVault) ? "WITHDRAW" : "STORE";
-				//player.sendMessage("Vault in " + mode + " mode.");
+				if (changed)
+				{
+					player.sendMessage("New Balance: " + accessedVault.toString() + " xp.");
+				}
 			}
 		}
 	}
@@ -119,7 +119,7 @@ public class PlayerListener implements Listener {
 	// We should keep leftover xp.
 	private void handleWithdrawXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
-		final int startingBalance = accessedVault.getBalance();
+		final long startingBalance = accessedVault.getRealBalance();
 		
 		final long leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
 		
@@ -130,7 +130,7 @@ public class PlayerListener implements Listener {
 			handleRegularWithdraw(player, accessedVault);
 		}
 		
-		player.sendMessage(startingBalance - accessedVault.getBalance() + " has been withdraw.");
+		player.sendMessage(startingBalance - accessedVault.getRealBalance() + " has been withdraw.");
 	}
 
 	private void handleOverflowWithdraw(final Player player, 
@@ -168,9 +168,8 @@ public class PlayerListener implements Listener {
 		XPVault accessedVault;
 		
 		if (repository.containsKey(blockLoc)) {
-			ExperienceShelves.log("Repository found existing Vault.");
 			accessedVault = repository.get(clickedBlock.getLocation());
-			
+			ExperienceShelves.log("Repository found existing Vault(" + accessedVault.getBalance() + ").");
 			// TODO: Perform extra check here to make sure Block is still a valid vault
 			
 			
