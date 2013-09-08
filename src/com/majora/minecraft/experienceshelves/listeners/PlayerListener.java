@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
 import com.majora.minecraft.experienceshelves.models.IRepository;
@@ -41,21 +42,17 @@ public class PlayerListener implements Listener {
 	{
 		if(!event.hasBlock()) return;
 		
-		if (isRightClick( event ))
+		if (isRightClick( event ) && isPlayerHandEmpty(event))
 		{
 			if (isClickedBlockXPVault( event ))
 			{
 				final Player player = event.getPlayer();
-				
 				final long totalXp = calcTotalXp(player);
 				final Block clickedBlock = event.getClickedBlock();
-				
-				// Let's pull out the essential info from Block
 				final Location blockLoc = clickedBlock.getLocation();
 				
-				XPVault accessedVault = findOrCreateVault(player, clickedBlock, blockLoc);
-				
-				assert(accessedVault != null);
+				final XPVault accessedVault = findOrCreateVault(player, clickedBlock, blockLoc);
+				if (!isPlayerVaultOwner(player, accessedVault)) return;
 				
 				
 				// At this point, we can now check the mode and whether the vault is locked or not
@@ -63,31 +60,58 @@ public class PlayerListener implements Listener {
 					// Tell player they must unlock before they interact
 					player.sendMessage("You must unlock the vault before you can interact.");
 					return;
-				} else {
-					if (accessedVault.getMode() == 0) // Store mode
-					{
-						handleStoreXP(player, totalXp, accessedVault);
-					} else if (accessedVault.getMode() == 1 && accessedVault.getBalance() > 0) // Withdraw mode
-					{
-						handleWithdrawXP(player, totalXp, accessedVault);
-					}
-					
-					player.sendMessage("You have a leftover balance of: " + accessedVault.toString() + " xp.");
-					accessedVault.setMode((accessedVault.getMode() == 1) ? 0 : 1);
-					
-					String mode = (accessedVault.getMode() == 1) ? "WITHDRAW" : "STORE";
-					player.sendMessage("Vault in " + mode + " mode.");
+				} 
+				
+				
+				if (isVaultInStoreMode(accessedVault) && playerCanStore(totalXp)) // Store mode
+				{
+					handleStoreXP(player, totalXp, accessedVault);
+				} else if (isVaultInWithdrawMode(accessedVault) && canWithdrawFromVault(accessedVault)) // Withdraw mode
+				{
+					handleWithdrawXP(player, totalXp, accessedVault);
 				}
+				
+				player.sendMessage("New Balance: " + accessedVault.toString() + " xp.");
+				accessedVault.setMode(isVaultInWithdrawMode(accessedVault) ? 0 : 1);
+				
+				//String mode = isVaultInWithdrawMode(accessedVault) ? "WITHDRAW" : "STORE";
+				//player.sendMessage("Vault in " + mode + " mode.");
 			}
 		}
+	}
+
+	private boolean playerCanStore(final long totalXp) {
+		return totalXp > 0;
+	}
+
+	private boolean canWithdrawFromVault(final XPVault accessedVault) {
+		return accessedVault.getBalance() > 0;
+	}
+
+	private boolean isVaultInWithdrawMode(final XPVault accessedVault) {
+		return accessedVault.getMode() == 1;
+	}
+
+	private boolean isVaultInStoreMode(final XPVault accessedVault) {
+		return accessedVault.getMode() == 0;
+	}
+
+	private boolean isPlayerVaultOwner(final Player player,
+			final XPVault accessedVault) {
+		return accessedVault.getOwnerName().equals(player.getName());
+	}
+
+	private boolean isPlayerHandEmpty(PlayerInteractEvent event) {
+		ItemStack item = event.getPlayer().getItemInHand();
+		return item == null || item.getTypeId() == 0 || item.getAmount() == 0;
 	}
 
 	private void handleStoreXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
 		accessedVault.setBalance(totalXp);
-		player.sendMessage("Added " + totalXp + " to vault.");
 		player.setExp(0.0f);
 		player.setLevel(0);
+		player.sendMessage("Added " + totalXp + " to vault.");
 	}
 
 	// We need to worry about overflow here. If player has xp amt which
@@ -144,11 +168,14 @@ public class PlayerListener implements Listener {
 		XPVault accessedVault;
 		
 		if (repository.containsKey(blockLoc)) {
+			ExperienceShelves.log("Repository found existing Vault.");
 			accessedVault = repository.get(clickedBlock.getLocation());
 			
 			// TODO: Perform extra check here to make sure Block is still a valid vault
 			
+			
 		} else {
+			ExperienceShelves.log("Creating new Vault.");
 			accessedVault = createXPVault(clickedBlock, player);
 			repository.put(clickedBlock.getLocation(), accessedVault);
 		}

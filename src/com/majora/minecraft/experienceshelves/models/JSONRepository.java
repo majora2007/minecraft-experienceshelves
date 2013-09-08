@@ -1,5 +1,7 @@
 package com.majora.minecraft.experienceshelves.models;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
@@ -8,16 +10,26 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Server;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import com.majora.minecraft.experienceshelves.ExperienceShelves;
 
 public class JSONRepository implements IRepository<Location, XPVault> {
 
-	private Map<Location, XPVault> vaults = new HashMap<Location, XPVault>();
+	private Map<Location, XPVault> vaults;
+	private Server server = null;
 	private String filePath = null;
 	
-	public JSONRepository(String filePath) {
+	public JSONRepository(String filePath, Server server) {
 		this.filePath = filePath;
+		this.server = server;
+		
+		vaults = new HashMap<Location, XPVault>();
 	}
 	
 	@Override
@@ -31,11 +43,12 @@ public class JSONRepository implements IRepository<Location, XPVault> {
     	{
     		Entry<Location, XPVault> pairs = it.next();
     		JSONObject jsonEntry = new JSONObject();
-    		XPVault vault = pairs.getValue();
+    		XPVault vault = (XPVault) pairs.getValue();
     		jsonEntry.put("location.x", vault.getBlockX());
     		jsonEntry.put("location.y", vault.getBlockY());
     		jsonEntry.put("location.z", vault.getBlockZ());
     		jsonEntry.put("location.world", vault.getWorldName());
+    		jsonEntry.put("vault.material", vault.getBlockMaterial().name());
     		jsonEntry.put("vault.owner", vault.getOwnerName());
     		jsonEntry.put("vault.balance", vault.getRealBalance());
     		jsonEntry.put("vault.locked", vault.isLocked());
@@ -49,7 +62,55 @@ public class JSONRepository implements IRepository<Location, XPVault> {
 
 	@Override
 	public void load() {
-		// TODO Auto-generated method stub
+		
+		JSONParser parser = new JSONParser();
+		
+		try {
+			JSONObject obj = (JSONObject) parser.parse( new FileReader(filePath) );
+			JSONArray jsonVaults = (JSONArray) obj.get("vaults");
+			
+			vaults.clear();
+			XPVault vault;
+			
+			for(Object entry : jsonVaults)
+			{
+				JSONObject jsonEntry = (JSONObject) entry;
+				
+				vault = new XPVault();
+				//ExperienceShelves.log("type is " + jsonEntry.get("vault.locked").getClass().getName());
+				vault.setBlockX(((Long) jsonEntry.get("location.x")).intValue());
+				vault.setBlockY(((Long) jsonEntry.get("location.y")).intValue());
+				vault.setBlockZ(((Long) jsonEntry.get("location.z")).intValue());
+				vault.setWorldName((String) jsonEntry.get("location.world"));
+				vault.setBlockMaterial(Material.getMaterial((String) jsonEntry.get("vault.material")));
+				vault.setOwnerName((String) jsonEntry.get("vault.owner"));
+				vault.setLocked(((Boolean) jsonEntry.get("vault.locked")).booleanValue());
+				vault.setBalance(((Long) jsonEntry.get("vault.balance")).longValue());
+				
+				vaults.put(new Location(server.getWorld(vault.getWorldName()), vault.getBlockX(), vault.getBlockY(), vault.getBlockZ()), vault);
+			}
+			
+			if (vaults.isEmpty())
+			{
+				ExperienceShelves.log("Set is empty after loading.");
+			} else {
+				Iterator<Entry<Location, XPVault>> it = vaults.entrySet().iterator();
+		    	
+		    	while (it.hasNext())
+		    	{
+		    		Entry<Location, XPVault> pairs = it.next();
+		    		ExperienceShelves.log("Balance: " + pairs.getValue().getRealBalance());
+		    	}
+				
+			}
+			
+		} catch (FileNotFoundException ex) {
+			ex.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} catch (ParseException ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	@Override

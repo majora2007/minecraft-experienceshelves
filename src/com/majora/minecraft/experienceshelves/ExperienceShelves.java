@@ -28,13 +28,15 @@ public final class ExperienceShelves extends JavaPlugin {
 		initializeLoggerPrefix();
 		
 		final String vaultsFilePath = "" + this.getDataFolder() + "\\vaults.JSON";
-		repository = new JSONRepository(vaultsFilePath);
+		repository = new JSONRepository(vaultsFilePath, getServer());
 		
 		this.playerListener = new com.majora.minecraft.experienceshelves.listeners.PlayerListener(this, repository);
 		getServer().getPluginManager().registerEvents(this.playerListener, this);
-
 		
-		ExperienceShelves.log("ExperienceShelves has been enabled");
+		repository.load();
+		
+		//PluginDescriptionFile pluginDescriptionFile = getDescription();
+		//ExperienceShelves.log("Enabling " + pluginDescriptionFile.getName() + " v" + pluginDescriptionFile.getVersion());
 	}
 	
 	@Override
