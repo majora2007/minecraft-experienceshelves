@@ -44,10 +44,7 @@ public final class ExperienceShelves extends JavaPlugin {
 	@Override
 	public void onDisable() 
 	{
-		
 		repository.save();
-		
-		//ExperienceShelves.log("ExperienceShelves has been disabled");
 	}
 	
 	private void initializeLoggerPrefix()
@@ -67,35 +64,78 @@ public final class ExperienceShelves extends JavaPlugin {
 	{
 		if (cmd.getName().equalsIgnoreCase("xps"))
 		{
-			if (args.length == 1 && args[0].equalsIgnoreCase("lock"))
+			if (!(sender instanceof Player))
 			{
-				if (!(sender instanceof Player))
+				sender.sendMessage("This command can only be run by a player.");
+				return true;
+			}
+			
+			if (args.length == 1)
+			{
+				if (args[0].equalsIgnoreCase("lock"))
 				{
-					sender.sendMessage("This command can only be run by a player.");
-				} else {
-					Player player = (Player) sender;
-					Block targetedBlock = player.getTargetBlock(null, 5);
-					
-					if (repository.containsKey(targetedBlock.getLocation()))
-					{
-						final XPVault vault = repository.get(targetedBlock.getLocation());
-						
-						if (player.getName().equals(vault.getOwnerName()))
-						{
-							vault.setLocked(!vault.isLocked());
-							final String lockState = vault.isLocked() ? "locked" : "unlocked";
-							sender.sendMessage("Vault is now " + lockState);
-						} else {
-							sender.sendMessage("You cannot interact with a vault you do not own.");
-						}
-					} else {
-						sender.sendMessage("That is not a valid vault.");
-					}
+					handleLockCmd(sender);
+				} else if (args[0].equalsIgnoreCase("balance"))
+				{
+					handleBalanceCmd(sender);
 				}
+				
 				return true;
 			}
 		}
 		
 		return false;
+	}
+
+	private void handleLockCmd(CommandSender sender) 
+	{
+		Player player = (Player) sender;
+		XPVault vault = getValidVaultInView(sender, player);
+		
+		if (vault != null) // getValidVaultInView handles error messages.
+		{
+			vault.setLocked(!vault.isLocked());
+			final String lockState = vault.isLocked() ? "locked" : "unlocked";
+			sender.sendMessage("Vault is now " + lockState);
+		}
+	}
+	
+	private void handleBalanceCmd(CommandSender sender) 
+	{
+		Player player = (Player) sender;
+		XPVault vault = getValidVaultInView(sender, player);
+		
+		if (vault != null) // getValidVaultInView handles error messages.
+		{
+			sender.sendMessage("Vault has a balance of " + vault.toString() + " xp.");
+		}
+	}
+
+	/**
+	 * A vault is valid if the sender (player) is owner and vault is within 5 blocks in front of 
+	 * sender.
+	 * 
+	 * @param sender
+	 * @param player
+	 * @return Vault if valid, else null.
+	 */
+	private XPVault getValidVaultInView(CommandSender sender, Player player) {
+		Block targetedBlock = player.getTargetBlock(null, 5);
+		
+		if (repository.containsKey(targetedBlock.getLocation()))
+		{
+			final XPVault vault = repository.get(targetedBlock.getLocation());
+			
+			if (player.getName().equals(vault.getOwnerName()))
+			{
+				return vault;
+			} else {
+				sender.sendMessage("You cannot interact with a vault you do not own.");
+			}
+		} else {
+			sender.sendMessage("That is not a valid vault.");
+		}
+		
+		return null;
 	}
 }
