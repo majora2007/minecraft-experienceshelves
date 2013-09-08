@@ -60,6 +60,7 @@ public final class ExperienceShelves extends JavaPlugin {
 		ExperienceShelves.consoleLogger.info(pluginLogPrefix + msg);
 	}
 	
+	// NOTE: BUG: This doesn't always get called when xps lock is called.
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) 
 	{
 		if (cmd.getName().equalsIgnoreCase("xps"))
@@ -72,12 +73,21 @@ public final class ExperienceShelves extends JavaPlugin {
 				} else {
 					Player player = (Player) sender;
 					Block targetedBlock = player.getTargetBlock(null, 5);
+					
 					if (repository.containsKey(targetedBlock.getLocation()))
 					{
 						final XPVault vault = repository.get(targetedBlock.getLocation());
-						vault.setLocked(!vault.isLocked());
-						final String lockState = vault.isLocked() ? "locked" : "unlocked";
-						sender.sendMessage("Vault is now " + lockState);
+						
+						if (player.getName().equals(vault.getOwnerName()))
+						{
+							vault.setLocked(!vault.isLocked());
+							final String lockState = vault.isLocked() ? "locked" : "unlocked";
+							sender.sendMessage("Vault is now " + lockState);
+						} else {
+							sender.sendMessage("You cannot interact with a vault you do not own.");
+						}
+					} else {
+						sender.sendMessage("That is not a valid vault.");
 					}
 				}
 				return true;

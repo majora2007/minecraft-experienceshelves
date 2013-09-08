@@ -47,7 +47,6 @@ public class PlayerListener implements Listener {
 		if(!event.hasBlock()) return;
 		
 		final Player player = event.getPlayer();
-		boolean changed = false;
 		
 		if (isClickedBlockXPVault( event ))
 		{
@@ -67,15 +66,18 @@ public class PlayerListener implements Listener {
 			
 			if (isRightClick( event ) && isPlayerHandEmpty(event))
 			{
-				handleWithdrawXP(player, totalXp, accessedVault);
-				changed = true;
+				if (canWithdrawFromVault(accessedVault))
+				{
+					handleWithdrawXP(player, totalXp, accessedVault);
+				} else {
+					player.sendMessage("The vault is empty.");
+				}
 			} else if (isLeftClick(event) && isPlayerHandEmpty(event))
 			{
 				// Store XP here only
 				if (playerCanStore(totalXp))
 				{
 					handleStoreXP(player, totalXp, accessedVault);
-					changed = true;
 				} else {
 					player.sendMessage("You have no xp to store.");
 				}
@@ -107,7 +109,10 @@ public class PlayerListener implements Listener {
 
 	private void handleStoreXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
-		accessedVault.setBalance(totalXp);
+		
+		// You don't set balance, but add to balance
+		//accessedVault.setBalance(totalXp);
+		accessedVault.setBalance(accessedVault.getRealBalance() + totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
 		player.sendMessage("Added " + totalXp + " to vault.");
@@ -118,6 +123,8 @@ public class PlayerListener implements Listener {
 	// We should keep leftover xp.
 	private void handleWithdrawXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
+		
+		ExperienceShelves.log("Handling Withdraw");
 		final long startingBalance = accessedVault.getRealBalance();
 		
 		final long leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
@@ -129,11 +136,12 @@ public class PlayerListener implements Listener {
 			handleRegularWithdraw(player, accessedVault);
 		}
 		
-		player.sendMessage(startingBalance - accessedVault.getRealBalance() + " has been withdraw.");
+		player.sendMessage(startingBalance - accessedVault.getRealBalance() + " has been withdrawn.");
 	}
 
 	private void handleOverflowWithdraw(final Player player, 
 			final XPVault accessedVault, final long leftoverXp) {
+		ExperienceShelves.log("Handling Overflow Withdraw");
 		// There is leftover, so let's take abs value and store into vault
 		player.setExp(1.0f);
 		player.setLevel(MAX_LEVEL);
@@ -141,15 +149,24 @@ public class PlayerListener implements Listener {
 		accessedVault.setBalance(Math.abs(leftoverXp));
 	}
 
+	// BUG: There is a bug here in which percentage is not getting set.
+	// BUG: Sometimes xp will clear?
 	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) {
+		
+		ExperienceShelves.log("Handling Normal Withdraw");
+		
 		// There is no leftover, so just add the balance to the user
 		int tempBalance = accessedVault.getBalance();
-		do
+		
+		if (tempBalance >= player.getExpToLevel())
 		{
-			int currentLevel = player.getLevel();
-			tempBalance -= player.getExpToLevel();
-			player.setLevel(currentLevel+1);
-		} while (tempBalance >= player.getExpToLevel());
+			while (tempBalance > player.getExpToLevel())
+			{
+				final int currentLevel = player.getLevel();
+				tempBalance -= player.getExpToLevel();
+				player.setLevel(currentLevel + 1);
+			}
+		}
 		
 		
 		// At this point tempBalance is less than next level, so we calculate the percentage till next level, 
@@ -158,7 +175,9 @@ public class PlayerListener implements Listener {
 		
 		// If we give player percentage, then our vault is empty. 
 		player.setExp(percentage);
-		accessedVault.setBalance(0);
+		accessedVault.setBalance(0); // NOTE: You can set to 0 as we are guarenteed that vault does not have more xp than can be withdrawn.
+		
+		//ExperienceShelves.log("tempBalance: " + tempBalance + "  xp %: " + player.getExp());
 	}
 
 	private XPVault findOrCreateVault(final Player player,
@@ -203,41 +222,19 @@ public class PlayerListener implements Listener {
 		if (currentLevel < 15)
 		{
 			// There is a staic 17 xp between levels
-			// The reason for times 100 / 100 is to eliminate floating point errors without causing a huge loss of xp. We only care about 2 decimal points.
-			totalXp = currentLevel * 17 + ( (int) (expPercent*100) * expToNextLevel) / 100;
+			// The reason for times c / c is to eliminate floating point errors without causing a huge loss of xp. We only care about 2 decimal points.
+			totalXp = currentLevel * 17 + ( (int) (expPercent*10000000) * expToNextLevel) / 10000000;
 		} else if (currentLevel <= 30)
 		{
 			float baseLvlXp = ((1.5f * (currentLevel * currentLevel)) - (29.5f * currentLevel) + 360);
-			totalXp = (int) (baseLvlXp + ( (int) (expPercent*1000) * expToNextLevel) / 1000);
+			totalXp = (int) (baseLvlXp + ( (int) (expPercent*10000000) * expToNextLevel) / 10000000);
 		} else if (currentLevel >= 31)
 		{
 			float baseLvlXp = ((3.5f * (currentLevel * currentLevel)) - (151.5f * currentLevel) + 2220);
-			totalXp = (int) (baseLvlXp + ( (int) (expPercent*1000) * expToNextLevel) / 1000);
+			totalXp = (int) (baseLvlXp + ( (int) (expPercent*10000000) * expToNextLevel) / 10000000);
 		}
 		
 		return totalXp;
-	}
-	
-	// This does not work!
-	private int calcXpLevel(int totalXp)
-	{
-		int level = 0;
-		
-		final int level15XP = 255;
-		final int level30XP = 825;
-		final int level31XP = 887;
-		
-		if (totalXp <= level15XP)
-		{
-			level = (int) Math.floor(totalXp / 17);
-		} else if (totalXp <= level30XP)
-		{
-			//level = ((1.5f * (currentLevel * currentLevel)) - (29.5f * currentLevel) + 360);
-			//level = ((1.5f * (currentLevel * currentLevel)) - (29.5f * currentLevel) + 360);
-		}
-		
-		
-		return level;
 	}
 
 	private boolean isRightClick( PlayerInteractEvent event )
