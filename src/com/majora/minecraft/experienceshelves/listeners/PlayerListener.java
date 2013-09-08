@@ -24,6 +24,7 @@ public class PlayerListener implements Listener {
 	// NOTE: It looks like xp is store internally as a char, meaning max xp is 
 	// 65,635
 	final int MAX_EXP = 65635;
+	final int MAX_LEVEL = 159;
 	
 	
 	public PlayerListener(ExperienceShelves instance) {
@@ -49,18 +50,12 @@ public class PlayerListener implements Listener {
 				// Let's pull out the essential info from Block
 				final Location blockLoc = clickedBlock.getLocation();
 				
-				XPVault accessedVault = null;
-				if (vaults.containsKey(blockLoc)) {
-					accessedVault = vaults.get(clickedBlock.getLocation());
-					
-					// TODO: Perform extra check here to make sure Block is still a valid vault
-					
-				} else {
-					accessedVault = createXPVault(clickedBlock, player, totalXp);
-					vaults.put(clickedBlock.getLocation(), accessedVault);
-				}
+				XPVault accessedVault = findOrCreateVault(player, totalXp,
+						clickedBlock, blockLoc);
 				
 				assert(accessedVault != null);
+				
+				
 				// At this point, we can now check the mode and whether the vault is locked or not
 				if (accessedVault.isLocked()) {
 					// Tell player they must unlock before they interact
@@ -69,61 +64,93 @@ public class PlayerListener implements Listener {
 				} else {
 					if (accessedVault.getMode() == 0) // Store mode
 					{
-						accessedVault.setBalance(totalXp);
-						player.sendMessage("Added " + totalXp + " to vault.");
-						player.setExp(0.0f);
-						player.setLevel(0);
-						
-						// Clear player's xp level
+						handleStoreXP(player, totalXp, accessedVault);
 					} else if (accessedVault.getMode() == 1 && accessedVault.getBalance() > 0) // Withdraw mode
 					{
-						// We need to worry about overflow here. If player has xp amt which
-						// is > MAX - vault's xp, an overflow will happen (thus xp loss).
-						// We should keep leftover xp.
-						final int startingBalance = accessedVault.getBalance();
-						
-						int leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
-						
-						if ( leftoverXp < 0)
-						{
-							// There is leftover, so let's take abs value and store into vault
-							//player.setLevel(level);
-							//player.setExp(exp);
-							// TODO
-							
-							accessedVault.setBalance(Math.abs(leftoverXp));
-							accessedVault.setMode(0);
-						} else {
-							// There is no leftover, so just add the balance to the user
-							int tempBalance = accessedVault.getBalance();
-							do
-							{
-								int currentLevel = player.getLevel();
-								tempBalance -= player.getExpToLevel();
-								player.setLevel(currentLevel+1);
-							} while (tempBalance >= player.getExpToLevel());
-							
-							
-							// At this point tempBalance is less than next level, so we calculate the percentage till next level, 
-							// and set it.
-							final float percentage = (tempBalance*1.0f) / (player.getExpToLevel()*1.0f);
-							ExperienceShelves.log("Percentage: " + percentage);
-							
-							// If we give player percentage, then our vault is empty. 
-							player.setExp(percentage);
-							accessedVault.setBalance(0);
-						}
-						
-						player.sendMessage(startingBalance - accessedVault.getBalance() + " has been withdraw.");
-						accessedVault.setMode((accessedVault.getMode() == 1) ? 0 : 1);
+						handleWithdrawXP(player, totalXp, accessedVault);
 					}
 					
 					player.sendMessage("You have a leftover balance of: " + accessedVault.getBalance() + " xp.");
+					accessedVault.setMode((accessedVault.getMode() == 1) ? 0 : 1);
+					
+					String mode = (accessedVault.getMode() == 1) ? "WITHDRAW" : "STORE";
+					player.sendMessage("Vault in " + mode + " mode.");
 				}
-				
-				
 			}
 		}
+	}
+
+	private void handleStoreXP(final Player player, final int totalXp,
+			XPVault accessedVault) {
+		accessedVault.setBalance(totalXp);
+		player.sendMessage("Added " + totalXp + " to vault.");
+		player.setExp(0.0f);
+		player.setLevel(0);
+	}
+
+	// We need to worry about overflow here. If player has xp amt which
+	// is > MAX - vault's xp, an overflow will happen (thus xp loss).
+	// We should keep leftover xp.
+	private void handleWithdrawXP(final Player player, final int totalXp,
+			XPVault accessedVault) {
+		final int startingBalance = accessedVault.getBalance();
+		
+		int leftoverXp = MAX_EXP - (totalXp + accessedVault.getBalance());
+		
+		if ( leftoverXp < 0)
+		{
+			handleOverflowWithdraw(player, accessedVault, leftoverXp);
+		} else {
+			handleRegularWithdraw(player, accessedVault);
+		}
+		
+		player.sendMessage(startingBalance - accessedVault.getBalance() + " has been withdraw.");
+	}
+
+	private void handleOverflowWithdraw(final Player player,
+			XPVault accessedVault, int leftoverXp) {
+		// There is leftover, so let's take abs value and store into vault
+		player.setExp(1.0f);
+		player.setLevel(MAX_LEVEL);
+
+		accessedVault.setBalance(Math.abs(leftoverXp));
+		accessedVault.setMode(0);
+	}
+
+	private void handleRegularWithdraw(final Player player,
+			XPVault accessedVault) {
+		// There is no leftover, so just add the balance to the user
+		int tempBalance = accessedVault.getBalance();
+		do
+		{
+			int currentLevel = player.getLevel();
+			tempBalance -= player.getExpToLevel();
+			player.setLevel(currentLevel+1);
+		} while (tempBalance >= player.getExpToLevel());
+		
+		
+		// At this point tempBalance is less than next level, so we calculate the percentage till next level, 
+		// and set it.
+		final float percentage = (tempBalance*1.0f) / (player.getExpToLevel()*1.0f);
+		
+		// If we give player percentage, then our vault is empty. 
+		player.setExp(percentage);
+		accessedVault.setBalance(0);
+	}
+
+	private XPVault findOrCreateVault(final Player player, final int totalXp,
+			final Block clickedBlock, final Location blockLoc) {
+		XPVault accessedVault;
+		if (vaults.containsKey(blockLoc)) {
+			accessedVault = vaults.get(clickedBlock.getLocation());
+			
+			// TODO: Perform extra check here to make sure Block is still a valid vault
+			
+		} else {
+			accessedVault = createXPVault(clickedBlock, player, totalXp);
+			vaults.put(clickedBlock.getLocation(), accessedVault);
+		}
+		return accessedVault;
 	}
 	
 	private XPVault createXPVault(Block clickedBlock, Player player, int totalXp) {
