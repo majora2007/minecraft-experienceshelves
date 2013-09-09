@@ -76,7 +76,7 @@ public class PlayerListener implements Listener {
 		if (repository.containsKey(block.getLocation()))
 		{
 			XPVault vault = repository.get(block.getLocation());
-			if (vault.getOwnerName().equals(event.getPlayer().getName()) && Authentication.hasPermission(event.getPlayer(), "experienceshelves.break"))
+			if (vault.getOwnerName().equals(event.getPlayer().getName()) || Authentication.hasPermission(event.getPlayer(), "experienceshelves.break"))
 			{
 				repository.remove(block.getLocation());
 				repository.save();
