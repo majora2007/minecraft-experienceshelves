@@ -57,8 +57,8 @@ public final class Utility {
 		return event.getAction() == Action.LEFT_CLICK_BLOCK;
 	}
 	
-	public static boolean isPlayerHandEmpty(final PlayerInteractEvent event) {
-		ItemStack item = event.getPlayer().getItemInHand();
+	public static boolean isPlayerHandEmpty(final Player player) {
+		ItemStack item = player.getItemInHand();
 		return item == null || item.getType() == Material.AIR || item.getAmount() == 0;
 	}
 	

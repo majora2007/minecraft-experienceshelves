@@ -81,7 +81,6 @@ public class PlayerListener implements Listener {
 				repository.remove(block.getLocation());
 				repository.save();
 			} else {
-				//event.getPlayer().sendMessage(ChatColor.RED + "You cannot break someone else's vault.");
 				event.setCancelled(true);
 			}
 		}
@@ -97,7 +96,7 @@ public class PlayerListener implements Listener {
 		
 		final Player player = event.getPlayer();
 		
-		if (isClickedBlockXPVault( event ))
+		if (isClickedBlockXPVault( event ) && isPlayerHandValid(player))
 		{
 			final long totalXp = Utility.calcTotalXp(player);
 			final Block clickedBlock = event.getClickedBlock();
@@ -112,7 +111,7 @@ public class PlayerListener implements Listener {
 				return;
 			}
 			
-			if (Utility.isRightClick( event )) // && Utility.isPlayerHandEmpty(event)
+			if (Utility.isRightClick( event ) && isPlayerHandValid(player)) // && Utility.isPlayerHandEmpty(event)
 			{
 				if (canWithdrawFromVault(accessedVault))
 				{
@@ -120,7 +119,7 @@ public class PlayerListener implements Listener {
 				} else {
 					player.sendMessage(ChatColor.GREEN + "The vault is empty.");
 				}
-			} else if (Utility.isLeftClick(event)) // && Utility.isPlayerHandEmpty(event)
+			} else if (Utility.isLeftClick(event) && isPlayerHandValid(player)) // && Utility.isPlayerHandEmpty(event)
 			{
 				if (playerCanStore(totalXp))
 				{
@@ -130,6 +129,10 @@ public class PlayerListener implements Listener {
 				}
 			}
 		} 
+	}
+
+	private boolean isPlayerHandValid(final Player player) {
+		return Utility.isPlayerHandEmpty(player) || Utility.isPlayerHoldingItem(player, Material.getMaterial(this.plugin.getConfig().getInt("creation-item")));
 	}
 
 
@@ -223,16 +226,14 @@ public class PlayerListener implements Listener {
 			if (!Authentication.hasPermission(player, "experienceshelves.create")) return null;
 			final int creationItem = this.plugin.getConfig().getInt("creation-item", 0);
 			
-			ExperienceShelves.log("Creation Item: " + Material.getMaterial(creationItem).toString());
-			
 			if (Utility.isPlayerHoldingItem(player, Material.getMaterial(creationItem)))
 			{
 				accessedVault = createXPVault(clickedBlock, player);
 				repository.put(clickedBlock.getLocation(), accessedVault);
 				repository.save();
-			} else {
+			} /*else {
 				player.sendMessage(ChatColor.RED + "You can only create a vault with a " + ChatColor.GOLD + Material.getMaterial(creationItem).toString());
-			}
+			}*/
 		}
 		return accessedVault;
 	}
@@ -251,6 +252,6 @@ public class PlayerListener implements Listener {
 	
 	private boolean isClickedBlockXPVault( PlayerInteractEvent event )
 	{
-		return event.getClickedBlock().getType() == Material.BOOKSHELF;// && Utility.isPlayerHandEmpty(event);
+		return event.getClickedBlock().getType() == Material.BOOKSHELF;
 	}
 }
