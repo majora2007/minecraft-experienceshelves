@@ -40,9 +40,17 @@ public final class ExperienceShelves extends JavaPlugin {
 		this.playerListener = new PlayerListener(this, repository);
 		getServer().getPluginManager().registerEvents(this.playerListener, this);
 		
+		loadProperties();
+		
 		repository.load();
 	}
 	
+	private void loadProperties() {
+		int creationItem = getConfig().getInt("creation-item", -1);
+		if (creationItem == -1) getConfig().set("creation-item", 0);
+		
+	}
+
 	@Override
 	public void onDisable() 
 	{
@@ -54,6 +62,7 @@ public final class ExperienceShelves extends JavaPlugin {
 		final PluginDescriptionFile pluginDescriptionFile = getDescription();
 		prefix = "[" +  pluginDescriptionFile.getName() + "]: ";
 	}
+	
 
 	public static void log(final String msg)
 	{
@@ -66,6 +75,6 @@ public final class ExperienceShelves extends JavaPlugin {
 		if (!(cmd.getName().equalsIgnoreCase("xps") || cmd.getName().equalsIgnoreCase("experienceshelves"))) return false;
 		if (sender instanceof Player) return true; // Handling in command preprocess for now
 		
-		return false;
+		return true;
 	}
 }

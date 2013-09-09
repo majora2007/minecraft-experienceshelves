@@ -1,6 +1,3 @@
-vault-containers:
-  - BOOKSHELVES
-
 ## The item which when left clicked on a vault-container transforms it into an experience 
 ## container. The default is 0 (AIR)
 creation-item: 0

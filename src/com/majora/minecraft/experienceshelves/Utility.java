@@ -5,6 +5,7 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -27,7 +28,7 @@ public final class Utility {
 	 * @return Vault if valid, else null.
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static XPVault getValidVaultInView(Player player, IRepository repository) {
+	public static XPVault getValidVaultInView(final Player player, final IRepository repository) {
 		Block targetedBlock = player.getTargetBlock(null, 5);
 		
 		if (repository.containsKey(targetedBlock.getLocation()))
@@ -47,18 +48,23 @@ public final class Utility {
 		return null;
 	}
 	
-	public static boolean isRightClick( PlayerInteractEvent event )
+	public static boolean isRightClick( final PlayerInteractEvent event )
 	{
 		return (event.getAction() == Action.RIGHT_CLICK_BLOCK);
 	}
 	
-	public static boolean isLeftClick(PlayerInteractEvent event) {
+	public static boolean isLeftClick(final PlayerInteractEvent event) {
 		return event.getAction() == Action.LEFT_CLICK_BLOCK;
 	}
 	
-	public static boolean isPlayerHandEmpty(PlayerInteractEvent event) {
+	public static boolean isPlayerHandEmpty(final PlayerInteractEvent event) {
 		ItemStack item = event.getPlayer().getItemInHand();
 		return item == null || item.getType() == Material.AIR || item.getAmount() == 0;
+	}
+	
+	public static boolean isPlayerHoldingItem(final Player player, final Material itemType) {
+		final ItemStack itemInHand = player.getItemInHand();
+		return itemInHand != null && itemInHand.getType() == itemType;
 	}
 	
 	//http://www.minecraftwiki.net/wiki/Experience
