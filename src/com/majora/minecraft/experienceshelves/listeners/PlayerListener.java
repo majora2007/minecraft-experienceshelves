@@ -157,7 +157,7 @@ public class PlayerListener implements Listener {
 		accessedVault.addBalance(totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
-		player.sendMessage(ChatColor.DARK_PURPLE + "Added " + ChatColor.GOLD + NumberFormat.getInstance().format(totalXp) + ChatColor.DARK_PURPLE + " to vault.");
+		player.sendMessage(ChatColor.DARK_PURPLE + "Added " + ChatColor.GOLD + NumberFormat.getInstance().format(totalXp) + ChatColor.DARK_PURPLE + " xp to vault.");
 	}
 
 	private void handleWithdrawXP(final Player player, final long totalXp,
@@ -174,7 +174,7 @@ public class PlayerListener implements Listener {
 			handleRegularWithdraw(player, accessedVault);
 		}
 		
-		player.sendMessage(ChatColor.GOLD + NumberFormat.getInstance().format(startingBalance - accessedVault.getRealBalance()) + ChatColor.DARK_PURPLE + " has been withdrawn.");
+		player.sendMessage(ChatColor.GOLD + NumberFormat.getInstance().format(startingBalance - accessedVault.getRealBalance()) + ChatColor.DARK_PURPLE + " xp has been withdrawn.");
 	}
 
 
