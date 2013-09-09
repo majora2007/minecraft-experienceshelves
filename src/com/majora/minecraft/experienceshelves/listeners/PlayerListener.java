@@ -23,6 +23,7 @@ import org.bukkit.plugin.Plugin;
 import com.majora.minecraft.experienceshelves.Authentication;
 import com.majora.minecraft.experienceshelves.CommandHandler;
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
+import com.majora.minecraft.experienceshelves.Utility;
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
 
@@ -99,7 +100,7 @@ public class PlayerListener implements Listener {
 		
 		if (isClickedBlockXPVault( event ))
 		{
-			final long totalXp = calcTotalXp(player);
+			final long totalXp = Utility.calcTotalXp(player);
 			final Block clickedBlock = event.getClickedBlock();
 			final Location blockLoc = clickedBlock.getLocation();
 			
@@ -112,7 +113,7 @@ public class PlayerListener implements Listener {
 				return;
 			}
 			
-			if (isRightClick( event ) && isPlayerHandEmpty(event))
+			if (Utility.isRightClick( event ) && Utility.isPlayerHandEmpty(event))
 			{
 				if (canWithdrawFromVault(accessedVault))
 				{
@@ -120,7 +121,7 @@ public class PlayerListener implements Listener {
 				} else {
 					player.sendMessage(ChatColor.GREEN + "The vault is empty.");
 				}
-			} else if (isLeftClick(event) && isPlayerHandEmpty(event))
+			} else if (Utility.isLeftClick(event) && Utility.isPlayerHandEmpty(event))
 			{
 				if (playerCanStore(totalXp))
 				{
@@ -132,9 +133,6 @@ public class PlayerListener implements Listener {
 		} 
 	}
 
-	private boolean isLeftClick(PlayerInteractEvent event) {
-		return event.getAction() == Action.LEFT_CLICK_BLOCK;
-	}
 
 	private boolean playerCanStore(final long totalXp) {
 		return totalXp > 0;
@@ -147,11 +145,6 @@ public class PlayerListener implements Listener {
 	private boolean isPlayerVaultOwner(final Player player,
 			final XPVault accessedVault) {
 		return accessedVault.getOwnerName().equals(player.getName());
-	}
-
-	private boolean isPlayerHandEmpty(PlayerInteractEvent event) {
-		ItemStack item = event.getPlayer().getItemInHand();
-		return item == null || item.getType() == Material.AIR || item.getAmount() == 0;
 	}
 
 	private void handleStoreXP(final Player player, final long totalXp,
@@ -199,7 +192,7 @@ public class PlayerListener implements Listener {
 	private void handleRegularWithdraw(final Player player, final XPVault accessedVault) 
 	{
 		int tempBalance = accessedVault.getBalance();
-		final int currentProgress = calculateTotalXPForLevelProgress(player);
+		final int currentProgress = Utility.calculateTotalXPForLevelProgress(player);
 		
 		tempBalance += currentProgress;	
 		if (tempBalance >= player.getExpToLevel())
@@ -228,7 +221,6 @@ public class PlayerListener implements Listener {
 		if (repository.containsKey(blockLoc)) {
 			accessedVault = repository.get(clickedBlock.getLocation());
 		} else {
-			
 			if (!Authentication.hasPermission(player, "experienceshelves.create")) return null;
 			
 			accessedVault = createXPVault(clickedBlock, player);
@@ -239,7 +231,7 @@ public class PlayerListener implements Listener {
 	}
 	
 	private XPVault createXPVault(final Block clickedBlock, final Player player) {
-		XPVault vault = new XPVault();
+		final XPVault vault = new XPVault();
 		vault.setBlockMaterial(clickedBlock.getType());
 		vault.setBlockX(clickedBlock.getX());
 		vault.setBlockY(clickedBlock.getY());
@@ -249,77 +241,9 @@ public class PlayerListener implements Listener {
 		
 		return vault;
 	}
-
-	//http://www.minecraftwiki.net/wiki/Experience
-	private int calcTotalXp(final Player player) 
-	{
-		final int currentLevel = player.getLevel();
-		final int progressXP = calculateTotalXPForLevelProgress(player);
-
-		int totalXp = 0;
-		
-		if (currentLevel < 15)
-		{
-			int baseLvlXp = currentLevel * 17;
-			totalXp = baseLvlXp + progressXP;
-		} else if (currentLevel < 30)
-		{
-			float baseLvlXp = ((1.5f * (currentLevel * currentLevel)) - (29.5f * currentLevel) + 360);
-			totalXp = (int) (baseLvlXp + progressXP);
-		} else if (currentLevel >= 30)
-		{
-			float baseLvlXp = ((3.5f * (currentLevel * currentLevel)) - (151.5f * currentLevel) + 2220);
-			totalXp = (int) (baseLvlXp + progressXP);
-		}
-		
-		return totalXp;
-	}
-
-
-	/**
-	 * Calculate the totalXP for the current level player is at.
-	 * @param player
-	 * @return
-	 */
-	private int calculateTotalXPForLevelProgress(final Player player) 
-	{
-		final float currentExpPerent = player.getExp();
-		player.setExp(0.0f);
-		int totalXpForLevel = player.getExpToLevel();
-		player.setExp(currentExpPerent);
-		
-		return (int) Math.ceil(currentExpPerent * totalXpForLevel);
-	}
-
-	private boolean isRightClick( PlayerInteractEvent event )
-	{
-		return (event.getAction() == Action.RIGHT_CLICK_BLOCK);
-	}
 	
 	private boolean isClickedBlockXPVault( PlayerInteractEvent event )
 	{
-		return event.getClickedBlock().getType() == Material.BOOKSHELF && isPlayerHandEmpty(event);
+		return event.getClickedBlock().getType() == Material.BOOKSHELF && Utility.isPlayerHandEmpty(event);
 	}
-	
-	@SuppressWarnings("unused")
-	private void setMetadata(Block block, String key, Object value, Plugin plugin)
-	{
-		block.setMetadata(key, new FixedMetadataValue(plugin, value));
-	}
-	
-	@SuppressWarnings("unused")
-	private Object getMetadata(Block block, String key, Plugin plugin)
-	{
-		List<MetadataValue> values = block.getMetadata(key);
-		for(MetadataValue value : values)
-		{
-			if (value.getOwningPlugin().getDescription().getName().equals(plugin.getDescription().getName()))
-			{
-				return value.value();
-			}
-		}
-		
-		return null;
-	}
-
 }
