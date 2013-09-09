@@ -3,13 +3,10 @@ package com.majora.minecraft.experienceshelves.listeners;
 import java.text.NumberFormat;
 import java.util.List;
 
-import javax.swing.JTable.PrintMode;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,7 +23,6 @@ import org.bukkit.plugin.Plugin;
 import com.majora.minecraft.experienceshelves.Authentication;
 import com.majora.minecraft.experienceshelves.CommandHandler;
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
-import com.majora.minecraft.experienceshelves.Utility;
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
 
@@ -51,8 +47,6 @@ public class PlayerListener implements Listener {
 	{
 		if (event.isCancelled()) return;
 		
-		ExperienceShelves.log("Message: " + event.getMessage());
-		
 		final Player player = event.getPlayer();
 		final String[] tokens = event.getMessage().split(" ");
 		event.setCancelled(true);
@@ -62,20 +56,12 @@ public class PlayerListener implements Listener {
 		
 		
 		// Parse the commands
-		if (tokens[1].equalsIgnoreCase("lock"))
+		if (tokens[1].equalsIgnoreCase("lock") && Authentication.hasPermission(player, "experienceshelves.lock"))
 		{
-			if (Authentication.hasPermission(player, "experienceshelves.lock")) {
-				CommandHandler.handleLockCmd(player, repository);
-			} else {
-				player.sendMessage(ChatColor.RED + "You do not have permission to do that.");
-			}
-		} else if (tokens[1].equalsIgnoreCase("balance"))
+			CommandHandler.handleLockCmd(player, repository);
+		} else if (tokens[1].equalsIgnoreCase("balance") && Authentication.hasPermission(player, "experienceshelves.balance"))
 		{
-			if (Authentication.hasPermission(player, "experienceshelves.balance")) {
-				CommandHandler.handleBalanceCmd(player, repository);
-			} else {
-				player.sendMessage(ChatColor.RED + "You do not have permission to do that.");
-			}
+			CommandHandler.handleBalanceCmd(player, repository);
 		}
 	}
 	
@@ -90,12 +76,12 @@ public class PlayerListener implements Listener {
 		if (repository.containsKey(block.getLocation()))
 		{
 			XPVault vault = repository.get(block.getLocation());
-			if (vault.getOwnerName().equals(event.getPlayer().getName()))
+			if (vault.getOwnerName().equals(event.getPlayer().getName()) && Authentication.hasPermission(event.getPlayer(), "experienceshelves.break"))
 			{
 				repository.remove(block.getLocation());
 				repository.save();
 			} else {
-				event.getPlayer().sendMessage(ChatColor.RED + "You cannot break someone else's vault.");
+				//event.getPlayer().sendMessage(ChatColor.RED + "You cannot break someone else's vault.");
 				event.setCancelled(true);
 			}
 		}
@@ -117,8 +103,8 @@ public class PlayerListener implements Listener {
 			final Block clickedBlock = event.getClickedBlock();
 			final Location blockLoc = clickedBlock.getLocation();
 			
-			
 			final XPVault accessedVault = findOrCreateVault(player, clickedBlock, blockLoc);
+			if (accessedVault == null) return;
 			if (!isPlayerVaultOwner(player, accessedVault)) return;
 			
 			if (accessedVault.isLocked()) {
@@ -170,6 +156,9 @@ public class PlayerListener implements Listener {
 
 	private void handleStoreXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
+		
+		if (!Authentication.hasPermission(player, "experienceshelves.store")) return;
+		
 		accessedVault.addBalance(totalXp);
 		player.setExp(0.0f);
 		player.setLevel(0);
@@ -178,6 +167,8 @@ public class PlayerListener implements Listener {
 
 	private void handleWithdrawXP(final Player player, final long totalXp,
 			XPVault accessedVault) {
+		
+		if (!Authentication.hasPermission(player, "experienceshelves.withdraw")) return;
 		
 		final long startingBalance = accessedVault.getRealBalance();
 		
@@ -237,7 +228,9 @@ public class PlayerListener implements Listener {
 		if (repository.containsKey(blockLoc)) {
 			accessedVault = repository.get(clickedBlock.getLocation());
 		} else {
-			//ExperienceShelves.log("Creating new Vault.");
+			
+			if (!Authentication.hasPermission(player, "experienceshelves.create")) return null;
+			
 			accessedVault = createXPVault(clickedBlock, player);
 			repository.put(clickedBlock.getLocation(), accessedVault);
 			repository.save();
