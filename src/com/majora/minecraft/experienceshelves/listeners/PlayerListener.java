@@ -4,6 +4,7 @@ import java.text.NumberFormat;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -91,10 +92,12 @@ public class PlayerListener implements Listener {
 	public void onPlayerClick(PlayerInteractEvent event)
 	{
 		if (event.isCancelled()) return;
-		
 		if(!event.hasBlock()) return;
 		
 		final Player player = event.getPlayer();
+		
+		// Check if world is in creative mode and continue based on config item(use-in-creative-worlds)
+		if (!this.plugin.getConfig().getBoolean("use-in-creative") && player.getGameMode() == GameMode.CREATIVE) return;
 		
 		if (isClickedBlockXPVault( event ) && isPlayerHandValid(player))
 		{

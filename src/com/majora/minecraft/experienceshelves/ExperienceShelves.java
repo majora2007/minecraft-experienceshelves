@@ -49,6 +49,9 @@ public final class ExperienceShelves extends JavaPlugin {
 		int creationItem = getConfig().getInt("creation-item", -1);
 		if (creationItem == -1) getConfig().set("creation-item", 0);
 		
+		boolean useInCreativeWorld = getConfig().getBoolean("use-in-creative", false);
+		if (useInCreativeWorld == false) getConfig().set("use-in-creative", false);
+		
 	}
 
 	@Override
