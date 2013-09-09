@@ -2,9 +2,7 @@ package com.majora.minecraft.experienceshelves;
 
 import java.util.logging.Logger;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -36,6 +34,9 @@ public final class ExperienceShelves extends JavaPlugin {
 		final String vaultsFilePath = "" + this.getDataFolder() + "\\vaults.JSON";
 		repository = new JSONRepository(vaultsFilePath, getServer());
 		
+		// Load external permission/group plugins.
+		super.onEnable();
+		
 		this.playerListener = new PlayerListener(this, repository);
 		getServer().getPluginManager().registerEvents(this.playerListener, this);
 		
@@ -60,82 +61,11 @@ public final class ExperienceShelves extends JavaPlugin {
 	}
 	
 	@EventHandler
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) 
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
-		if (cmd.getName().equalsIgnoreCase("xps"))
-		{
-			if (!(sender instanceof Player))
-			{
-				sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
-				return true;
-			}
-			
-			if (args.length == 1)
-			{
-				if (args[0].equalsIgnoreCase("lock"))
-				{
-					handleLockCmd(sender);
-					return true;
-				} else if (args[0].equalsIgnoreCase("balance"))
-				{
-					handleBalanceCmd(sender);
-					return true;
-				}
-			}
-		}
+		if (!(cmd.getName().equalsIgnoreCase("xps") || cmd.getName().equalsIgnoreCase("experienceshelves"))) return false;
+		if (sender instanceof Player) return true; // Handling in command preprocess for now
 		
 		return false;
-	}
-
-	private void handleLockCmd(CommandSender sender) 
-	{
-		Player player = (Player) sender;
-		XPVault vault = getValidVaultInView(sender, player);
-		
-		if (vault != null) // getValidVaultInView handles error messages.
-		{
-			vault.setLocked(!vault.isLocked());
-			final String lockState = vault.isLocked() ? "locked" : "unlocked";
-			sender.sendMessage(ChatColor.GREEN + "Vault is now " + ChatColor.GOLD + lockState);
-		}
-	}
-	
-	private void handleBalanceCmd(CommandSender sender) 
-	{
-		Player player = (Player) sender;
-		XPVault vault = getValidVaultInView(sender, player);
-		
-		if (vault != null) // getValidVaultInView handles error messages.
-		{
-			sender.sendMessage(ChatColor.DARK_PURPLE + "Vault has a balance of " + ChatColor.GOLD + vault.toString()+ ChatColor.DARK_PURPLE + " xp.");
-		}
-	}
-
-	/**
-	 * A vault is valid if the sender (player) is owner and vault is within 5 blocks in front of 
-	 * sender.
-	 * 
-	 * @param sender
-	 * @param player
-	 * @return Vault if valid, else null.
-	 */
-	private XPVault getValidVaultInView(CommandSender sender, Player player) {
-		Block targetedBlock = player.getTargetBlock(null, 5);
-		
-		if (repository.containsKey(targetedBlock.getLocation()))
-		{
-			final XPVault vault = repository.get(targetedBlock.getLocation());
-			
-			if (player.getName().equals(vault.getOwnerName()))
-			{
-				return vault;
-			} else {
-				sender.sendMessage(ChatColor.RED + "You cannot interact with a vault you do not own.");
-			}
-		} else {
-			sender.sendMessage(ChatColor.RED + "That is not a vault.");
-		}
-		
-		return null;
 	}
 }

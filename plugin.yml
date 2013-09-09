@@ -1,28 +1,51 @@
 name: ExperienceShelves
-version: 0.1
+version: 0.2
 main: com.majora.minecraft.experienceshelves.ExperienceShelves
 
-description: DESCRIPTION OF PLUGIN
+description: A simple plugin which allows a player to store and withdraw experience in bookshelves. Inspired by the defunt mode MagicBookshelves by Derthmonuter.
 author: majora2007
 database: false
 
 commands:
-  xps:
-    description: Lock the currently selected vault.
+  experienceshelves:
+    aliases: [xps]
+    description: Lock the vault directly infront of player or view balance of.
     usage: |
-      /<command> lock 
-      /<command> balance
-    permission: <plugin name>.lock
-    permission-message: You don't have <permission>
-  
-  lock:
-    description: Lock the vault directly infront of player.
-    usage: /xps <command>
-    permission: <plugin name>.lock
-    permission-message: You don't have <permission>
+      /<command> lock - Lock the vault directly infront of player.
+      /<command> balance - Display the balance of vault directly infront of player.
     
-  balance:
-    description: Display the balance of vault directly infront of player.
-    usage: /xps <command>
-    permission: <plugin name>.balance
-    permission-message: You don't have <permission>
+permissions:
+  experienceshelves.*:
+    description: Gives access to all <plugin name> commands
+    children:
+      experienceshelves.lock: true
+      experienceshelves.balance: true
+      experienceshelves.break: true
+      experienceshelves.store: true
+      experienceshelves.withdraw: true
+      experienceshelves.snoop: true
+      experienceshelves.create: true
+  experienceshelves.lock:
+    description: Allows you to lock an xp container
+    default: op
+  experienceshelves.balance:
+    description: Allows you to view balance of an xp container
+    default: true
+  experienceshelves.break:
+    description: Allows your to break an xp container that is not owned by you
+    default: op
+  experienceshelves.store:
+    description: Allows you to store xp in an xp container
+    default: true
+  experienceshelves.withdraw:
+    description: Allows you to withdraw xp from an xp container
+    default: true
+  experienceshelves.snoop:
+    description: Allows you to run commands on an xp container you do not own
+    default: op
+    children:
+      experienceshelves.balance: true
+      experienceshelves.lock: true
+  experienceshelves.create:
+    description: Allows you to create an xp container
+    default: false

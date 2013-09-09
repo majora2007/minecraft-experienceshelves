@@ -30,15 +30,13 @@ public class JSONRepository implements IRepository<Location, XPVault> {
 		this.server = server;
 		
 		vaults = new HashMap<Location, XPVault>();
-		ExperienceShelves.log("JSONRepository: constructor called.");
 	}
 	
 	@Override
-	public void save() {
+	public void save() 
+	{
 		final JSONObject data = new JSONObject();
 		final JSONArray jVaults = new JSONArray();
-		
-		ExperienceShelves.log("JSONRepository: save called.");
 		
 		Iterator<Entry<Location, XPVault>> it = vaults.entrySet().iterator();
     	
@@ -60,15 +58,14 @@ public class JSONRepository implements IRepository<Location, XPVault> {
     	}
 
         data.put("vaults", jVaults);
+        
 		writeToDisk(data);
 	}
 
 	@Override
-	public void load() {
-		
-		ExperienceShelves.log("JSONRepository: load called.");
-		
-		JSONParser parser = new JSONParser();
+	public void load() 
+	{	
+		final JSONParser parser = new JSONParser();
 		
 		try {
 			JSONObject obj = (JSONObject) parser.parse( new FileReader(filePath) );

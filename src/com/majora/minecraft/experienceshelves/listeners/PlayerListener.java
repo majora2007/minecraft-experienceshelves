@@ -3,22 +3,30 @@ package com.majora.minecraft.experienceshelves.listeners;
 import java.text.NumberFormat;
 import java.util.List;
 
+import javax.swing.JTable.PrintMode;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 
+import com.majora.minecraft.experienceshelves.Authentication;
+import com.majora.minecraft.experienceshelves.CommandHandler;
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
+import com.majora.minecraft.experienceshelves.Utility;
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
 
@@ -36,6 +44,39 @@ public class PlayerListener implements Listener {
 	public PlayerListener(ExperienceShelves instance, IRepository<Location, XPVault> repo) {
 		this.plugin = instance;
 		this.repository = repo;
+	}
+	
+	@EventHandler(priority=EventPriority.NORMAL)
+	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event)
+	{
+		if (event.isCancelled()) return;
+		
+		ExperienceShelves.log("Message: " + event.getMessage());
+		
+		final Player player = event.getPlayer();
+		final String[] tokens = event.getMessage().split(" ");
+		event.setCancelled(true);
+		
+		// Tokens' length should be length 2 (/xps <command>)
+		if (tokens.length < 2 || !(tokens[0].equalsIgnoreCase("/xps") || tokens[0].equalsIgnoreCase("/experienceshelves"))) return;
+		
+		
+		// Parse the commands
+		if (tokens[1].equalsIgnoreCase("lock"))
+		{
+			if (Authentication.hasPermission(player, "experienceshelves.lock")) {
+				CommandHandler.handleLockCmd(player, repository);
+			} else {
+				player.sendMessage(ChatColor.RED + "You do not have permission to do that.");
+			}
+		} else if (tokens[1].equalsIgnoreCase("balance"))
+		{
+			if (Authentication.hasPermission(player, "experienceshelves.balance")) {
+				CommandHandler.handleBalanceCmd(player, repository);
+			} else {
+				player.sendMessage(ChatColor.RED + "You do not have permission to do that.");
+			}
+		}
 	}
 	
 	
