@@ -52,6 +52,8 @@ public final class ExperienceShelves extends JavaPlugin {
 		boolean useInCreativeWorld = getConfig().getBoolean("use-in-creative", false);
 		if (useInCreativeWorld == false) getConfig().set("use-in-creative", false);
 		
+		
+		this.saveConfig();
 	}
 
 	@Override
