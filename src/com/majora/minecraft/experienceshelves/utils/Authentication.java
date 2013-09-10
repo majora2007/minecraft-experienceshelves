@@ -1,4 +1,4 @@
-package com.majora.minecraft.experienceshelves;
+package com.majora.minecraft.experienceshelves.utils;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;

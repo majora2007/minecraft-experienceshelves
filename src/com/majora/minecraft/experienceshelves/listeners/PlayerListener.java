@@ -21,12 +21,12 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 
-import com.majora.minecraft.experienceshelves.Authentication;
 import com.majora.minecraft.experienceshelves.CommandHandler;
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
-import com.majora.minecraft.experienceshelves.Utility;
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
+import com.majora.minecraft.experienceshelves.utils.Authentication;
+import com.majora.minecraft.experienceshelves.utils.Utility;
 
 public class PlayerListener implements Listener {
 	

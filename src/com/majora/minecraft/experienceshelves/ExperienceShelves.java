@@ -2,6 +2,7 @@ package com.majora.minecraft.experienceshelves;
 
 import java.util.logging.Logger;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -14,6 +15,7 @@ import com.majora.minecraft.experienceshelves.listeners.PlayerListener;
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.JSONRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
+import com.majora.minecraft.experienceshelves.utils.FileUtils;
 
 public final class ExperienceShelves extends JavaPlugin {
 	
@@ -42,7 +44,14 @@ public final class ExperienceShelves extends JavaPlugin {
 		
 		loadProperties();
 		
-		repository.load();
+		// First check to see if the file exists, if not, this is our first time launching and we can ignore 
+		// this statement.
+		if (FileUtils.exists(vaultsFilePath))
+		{
+			repository.load();
+		} else {
+			ExperienceShelves.log("No vaults file loaded.");
+		}
 	}
 	
 	private void loadProperties() {

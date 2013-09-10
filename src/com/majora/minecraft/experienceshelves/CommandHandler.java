@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
+import com.majora.minecraft.experienceshelves.utils.Utility;
 
 public final class CommandHandler {
 	

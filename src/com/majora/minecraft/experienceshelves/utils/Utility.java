@@ -1,4 +1,4 @@
-package com.majora.minecraft.experienceshelves;
+package com.majora.minecraft.experienceshelves.utils;
 
 import java.util.List;
 
