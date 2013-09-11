@@ -34,12 +34,20 @@
 		</dependency>
 	</dependencies>
   <build>
+      <finalName>${project.name}</finalName>
+      <defaultGoal>clean package</defaultGoal>
+        
     <sourceDirectory>src</sourceDirectory>
     <resources>
-        <resource>
-            <directory>src/</directory>
-        </resource>
-    </resources>
+            <resource>
+                <targetPath>.</targetPath>
+                <directory>${basedir}/</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>*.yml</include>
+                </includes>
+            </resource>
+        </resources>
     <plugins>
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -66,9 +74,12 @@
 						<artifactSet>
 							<includes>
 								<include>*</include>
+								<!-- <include>**/plugin.yml</include>
+            					<include>**/config.yml</include> -->
 							</includes>
 							<excludes>
 								<exclude>org.bukkit:bukkit</exclude>
+								<exclude>**/*.java</exclude>
 							</excludes>
 						</artifactSet>
 					</configuration>
