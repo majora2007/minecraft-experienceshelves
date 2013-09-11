@@ -74,8 +74,6 @@
 						<artifactSet>
 							<includes>
 								<include>*</include>
-								<!-- <include>**/plugin.yml</include>
-            					<include>**/config.yml</include> -->
 							</includes>
 							<excludes>
 								<exclude>org.bukkit:bukkit</exclude>

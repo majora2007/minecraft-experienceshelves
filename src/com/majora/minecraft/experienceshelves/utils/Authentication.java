@@ -33,6 +33,8 @@ public final class Authentication {
 			result = player.hasPermission("experienceshelves.withdraw");
 		} else if (perm.equals("experienceshelves.create")) {
 			result = player.hasPermission("experienceshelves.create");
+		} else if (perm.equals("experienceshelves.move")) {
+			result = player.hasPermission("experienceshelves.move");
 		}
 		
 		if (!result) {

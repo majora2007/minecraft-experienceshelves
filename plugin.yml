@@ -14,6 +14,8 @@ commands:
     usage: |
       /<command> lock - Lock the vault directly infront of player.
       /<command> balance - Display the balance of vault directly infront of player.
+      /<command> move start - Start the move of a vault. Note if you don't end and log off, you will loose all xp in vault.
+      /<command> move end - End the move of a vault.
     
 permissions:
   experienceshelves.*:
@@ -26,11 +28,15 @@ permissions:
       experienceshelves.withdraw: true
       experienceshelves.snoop: true
       experienceshelves.create: true
+      experienceshelves.move: true
   experienceshelves.lock:
     description: Allows you to lock an xp container
     default: op
   experienceshelves.balance:
     description: Allows you to view balance of an xp container
+    default: true
+  experienceshelves.move:
+    description: Allows you to move an xp container without loosing xp inside.
     default: true
   experienceshelves.break:
     description: Allows your to break an xp container that is not owned by you

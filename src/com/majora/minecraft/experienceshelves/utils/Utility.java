@@ -5,7 +5,6 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -112,9 +111,28 @@ public final class Utility {
 		block.setMetadata(key, new FixedMetadataValue(plugin, value));
 	}
 	
-	public static  Object getMetadata(Block block, String key, Plugin plugin)
+	public static Object getMetadata(Block block, String key, Plugin plugin)
 	{
 		List<MetadataValue> values = block.getMetadata(key);
+		for(MetadataValue value : values)
+		{
+			if (value.getOwningPlugin().getDescription().getName().equals(plugin.getDescription().getName()))
+			{
+				return value.value();
+			}
+		}
+		
+		return null;
+	}
+	
+	public static void setMetadata(Player player, String key, Object value, Plugin plugin)
+	{
+		player.setMetadata(key, new FixedMetadataValue(plugin, value));
+	}
+	
+	public static Object getMetadata(Player player, String key, Plugin plugin)
+	{
+		List<MetadataValue> values = player.getMetadata(key);
 		for(MetadataValue value : values)
 		{
 			if (value.getOwningPlugin().getDescription().getName().equals(plugin.getDescription().getName()))

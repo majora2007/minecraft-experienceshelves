@@ -2,7 +2,6 @@ package com.majora.minecraft.experienceshelves;
 
 import java.util.logging.Logger;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -46,6 +45,10 @@ public final class ExperienceShelves extends JavaPlugin {
 		
 		// First check to see if the file exists, if not, this is our first time launching and we can ignore 
 		// this statement.
+		loadIfFileExitsts(vaultsFilePath);
+	}
+
+	private void loadIfFileExitsts(final String vaultsFilePath) {
 		if (FileUtils.exists(vaultsFilePath))
 		{
 			repository.load();

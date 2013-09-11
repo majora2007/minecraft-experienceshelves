@@ -14,6 +14,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -32,6 +33,7 @@ public class PlayerListener implements Listener {
 	
 	private ExperienceShelves plugin;
 	private IRepository<Location, XPVault> repository;
+	private boolean moveState = false; // If move start was typed, this will be true. Set to false once /xps move stop typed.
 	
 	// NOTE: It looks like xp is store internally as a char, meaning max xp is 
 	// 65,635
@@ -52,17 +54,37 @@ public class PlayerListener implements Listener {
 		final Player player = event.getPlayer();
 		final String[] tokens = event.getMessage().split(" ");
 		
-		// Tokens' length should be length 2 (/xps <command>)
+		// Tokens' length should be at least length 2 (/xps <command>)
 		if ( tokens.length < 2 || !(tokens[0].equalsIgnoreCase("/xps") || tokens[0].equalsIgnoreCase("/experienceshelves")) ) return;
 		event.setCancelled(true);
 		
+		
 		// Parse the commands
-		if (tokens[1].equalsIgnoreCase("lock") && Authentication.hasPermission(player, "experienceshelves.lock"))
+		if (tokens.length == 2)
 		{
-			CommandHandler.handleLockCmd(player, repository);
-		} else if (tokens[1].equalsIgnoreCase("balance") && Authentication.hasPermission(player, "experienceshelves.balance"))
+			if (tokens[1].equalsIgnoreCase("lock") && Authentication.hasPermission(player, "experienceshelves.lock"))
+			{
+				CommandHandler.handleLockCmd(player, repository);
+			} else if (tokens[1].equalsIgnoreCase("balance") && Authentication.hasPermission(player, "experienceshelves.balance"))
+			{
+				CommandHandler.handleBalanceCmd(player, repository);
+			}
+		} else if (tokens.length == 3)
 		{
-			CommandHandler.handleBalanceCmd(player, repository);
+			if (tokens[1].equalsIgnoreCase("move") && Authentication.hasPermission(player, "experienceshelves.move"))
+			{
+				if (tokens[2].equalsIgnoreCase("start")) 
+				{
+					moveState = true;
+					player.sendMessage(ChatColor.GREEN + "You are now in move mode.");
+				} else if (tokens[2].equalsIgnoreCase("stop") || tokens[2].equalsIgnoreCase("end"))
+				{
+					moveState = false;
+					player.sendMessage(ChatColor.GREEN + "Move mode ended.");
+				} else {
+					//TODO: return usage <command> start or stop
+				}
+			}
 		}
 	}
 	
@@ -74,17 +96,56 @@ public class PlayerListener implements Listener {
 
 		
 		final Block block = event.getBlock();
+		if (block == null) return;
+		
 		if (repository.containsKey(block.getLocation()))
 		{
 			XPVault vault = repository.get(block.getLocation());
 			if (vault.getOwnerName().equals(event.getPlayer().getName()) || Authentication.hasPermission(event.getPlayer(), "experienceshelves.break"))
 			{
+				if (moveState)
+				{
+					// Store the balance of the vault in Player's metadata.
+					Utility.setMetadata(event.getPlayer(), "experienceshelves.balance", repository.get(block.getLocation()).getRealBalance(), this.plugin);
+				}
+				
 				repository.remove(block.getLocation());
 				repository.save();
 			} else {
 				event.setCancelled(true);
 			}
 		}
+	}
+	
+	@EventHandler
+	public void onBlockPlace(BlockPlaceEvent event)
+	{
+		if (event.isCancelled()) return;
+		final Block block = event.getBlock();
+		if (block == null) return;
+		
+		ExperienceShelves.log("Block: " + event.getBlock().getType().toString());
+		ExperienceShelves.log("PlacedBlock: " + event.getBlockPlaced().getType().toString());
+		
+		if (isClickedBlockXPVault(block) && moveState)
+		{
+			if (event.getPlayer().hasMetadata("experienceshelves.balance"))
+			{
+				ExperienceShelves.log("Player has metadata: experienceshelves.balance");
+			}
+			
+			long balance = (long) Utility.getMetadata(event.getPlayer(), "experienceshelves.balance", this.plugin);
+			final XPVault vault = createXPVault(block, event.getPlayer());
+			vault.setBalance(balance);
+			
+			repository.put(block.getLocation(), vault);
+			repository.save();
+			
+			// Remove metadata
+			block.removeMetadata("experienceshelves.balance", this.plugin);
+		}
+		
+		
 	}
 	
 	
@@ -99,7 +160,7 @@ public class PlayerListener implements Listener {
 		// Check if world is in creative mode and continue based on config item(use-in-creative-worlds)
 		if (!this.plugin.getConfig().getBoolean("use-in-creative") && player.getGameMode() == GameMode.CREATIVE) return;
 		
-		if (isClickedBlockXPVault( event ) && isPlayerHandValid(player))
+		if (isClickedBlockXPVault( event.getClickedBlock() ) && isPlayerHandValid(player))
 		{
 			final long totalXp = Utility.calcTotalXp(player);
 			final Block clickedBlock = event.getClickedBlock();
@@ -253,8 +314,8 @@ public class PlayerListener implements Listener {
 		return vault;
 	}
 	
-	private boolean isClickedBlockXPVault( PlayerInteractEvent event )
+	private boolean isClickedBlockXPVault( final Block block )
 	{
-		return event.getClickedBlock().getType() == Material.BOOKSHELF;
+		return block.getType() == Material.BOOKSHELF;
 	}
 }
