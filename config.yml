@@ -2,3 +2,4 @@
 ## container. The default is 0 (AIR)
 creation-item: 0
 use-in-creative: false
+show-particles: true

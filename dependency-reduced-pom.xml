@@ -83,7 +83,7 @@
   <properties>
     <main.class>com.majora.minecraft.experienceshelves.ExperienceShelves</main.class>
     <cb_package>v1_6_R2</cb_package>
-    <project.version>1.0.1</project.version>
+    <project.version>1.0.2</project.version>
     <minecraft.version>1.6.2</minecraft.version>
     <craftbukkit.version>R0.2</craftbukkit.version>
   </properties>

@@ -60,7 +60,10 @@ public final class ExperienceShelves extends JavaPlugin {
 		// First check to see if the file exists, if not, this is our first time launching and we can ignore 
 		// this statement.
 		loadIfFileExitsts(vaultsFilePath);
-		scheduleParticleTasksForExistingVaults();
+		if (this.getConfig().getBoolean("show-particles"))
+		{
+			scheduleParticleTasksForExistingVaults();
+		}
 	}
 
 	private void scheduleParticleTasksForExistingVaults() {
@@ -81,12 +84,16 @@ public final class ExperienceShelves extends JavaPlugin {
 		}
 	}
 	
+	//BUG:NOTE: This way of setting things do not work...
 	private void loadProperties() {
 		int creationItem = getConfig().getInt("creation-item", -1);
-		if (creationItem == -1) getConfig().set("creation-item", 0);
+		if (creationItem == -1) getConfig().set("creation-item", 0); // set to default
 		
 		boolean useInCreativeWorld = getConfig().getBoolean("use-in-creative", false);
 		if (useInCreativeWorld == false) getConfig().set("use-in-creative", false);
+		
+		boolean useParticles = this.getConfig().getBoolean("show-particles", true);
+		if (useParticles == true) getConfig().set("show-particles", true);
 		
 		
 		this.saveConfig();

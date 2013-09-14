@@ -38,8 +38,6 @@ public class PlayerListener implements Listener {
 	public PlayerListener(ExperienceShelves instance, IRepository<Location, XPVault> repo) {
 		this.plugin = instance;
 		this.repository = repo;
-		
-		//this.particlePacketTasks = new ArrayList<BukkitTask>(3);
 	}
 	
 	@EventHandler(priority=EventPriority.NORMAL)
@@ -290,13 +288,15 @@ public class PlayerListener implements Listener {
 				repository.save();
 				
 				// Register a task which will now send a packet to animate vault.
-				this.plugin.scheduleDefaultVaultAnimation(clickedBlock);
-				
-				/*final Object packet = PacketFactory.createParticlePacket( ParticleType.MOB_SPELL_AMBIENT, clickedBlock, 1.0f, 0.6f, 1.0f, 0.3f, 100 );
-				particlePacketTasks.add( new SendPacketTask( this.plugin, clickedBlock.getLocation(), packet ).runTaskTimer( this.plugin, SEND_PACKET_DELAY, SEND_PACKET_INTERVAL ) );
-				//particlePacketTasks.add( new SendPacketTask( this.plugin, clickedBlock.getLocation(), packet ).runTaskTimer( this.plugin, SEND_PACKET_DELAY + new Random().nextInt( 19 ),  + new Random().nextInt( SEND_PACKET_INTERVAL ) ) );
-*/			}
+				if (this.plugin.getConfig().getBoolean("show-particles"))
+				{
+					this.plugin.scheduleDefaultVaultAnimation(clickedBlock);
+				}
+					
+
+			}
 		}
+		
 		return accessedVault;
 	}
 	
