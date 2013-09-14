@@ -1,8 +1,10 @@
 package com.majora.minecraft.experienceshelves.models;
 
 import java.text.NumberFormat;
+import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * XPVault represents a vault for experience. The vault contains all the information needed to represent it in 
@@ -30,6 +32,10 @@ public class XPVault {
 	private Material blockMaterial = null; // JVM: Should I set this to AIR?
 	
 	private boolean locked = false;
+	
+	// JVM: I am not sure if I need to associate the Tasks to a vault, so here are temp fields
+	//private List<BukkitTask> particleTasks;
+	// END
 	
 	public XPVault() {}
 

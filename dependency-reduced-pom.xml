@@ -2,23 +2,31 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.majora.minecraft.experienceshelves</groupId>
-  <artifactId>experience-shelves</artifactId>
+  <artifactId>ExperienceShelves</artifactId>
   <name>ExperienceShelves</name>
   <version>1.0.1</version>
+  <description>Allows a player to store and withdraw experience from blocks such as Bookshelves.</description>
   <build>
     <sourceDirectory>src</sourceDirectory>
+    <defaultGoal>clean package</defaultGoal>
     <resources>
       <resource>
-        <directory>src/</directory>
+        <targetPath>.</targetPath>
+        <filtering>true</filtering>
+        <directory>${basedir}/</directory>
+        <includes>
+          <include>*.yml</include>
+        </includes>
       </resource>
     </resources>
+    <finalName>${project.name}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.0</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.6</source>
+          <target>1.6</target>
         </configuration>
       </plugin>
       <plugin>
@@ -37,6 +45,7 @@
                 </includes>
                 <excludes>
                   <exclude>org.bukkit:bukkit</exclude>
+                  <exclude>**/*.java</exclude>
                 </excludes>
               </artifactSet>
             </configuration>
@@ -64,6 +73,19 @@
       <version>1.6.2-R0.1</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.bukkit</groupId>
+      <artifactId>craftbukkit</artifactId>
+      <version>1.6.2-R0.2-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
+  <properties>
+    <main.class>com.majora.minecraft.experienceshelves.ExperienceShelves</main.class>
+    <cb_package>v1_6_R2</cb_package>
+    <project.version>1.0.1</project.version>
+    <minecraft.version>1.6.2</minecraft.version>
+    <craftbukkit.version>R0.2</craftbukkit.version>
+  </properties>
 </project>
 

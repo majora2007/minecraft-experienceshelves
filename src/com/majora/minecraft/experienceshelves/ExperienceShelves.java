@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import com.majora.minecraft.experienceshelves.listeners.PlayerListener;
 import com.majora.minecraft.experienceshelves.models.IRepository;
@@ -21,12 +22,16 @@ public final class ExperienceShelves extends JavaPlugin {
 	private static Logger consoleLogger = Logger.getLogger("Minecraft");
 	public static String prefix;
 	
+	private static ExperienceShelves instance = null;
+	
 	private PlayerListener playerListener;
 	private IRepository<Location, XPVault> repository;
 	
 	@Override
 	public void onEnable() 
 	{
+		instance = this;
+		
 		// Save a copy of the default config.yml if one is not there
         this.saveDefaultConfig();
         
@@ -71,6 +76,11 @@ public final class ExperienceShelves extends JavaPlugin {
 	@Override
 	public void onDisable() 
 	{
+		for(BukkitTask task : playerListener.getTasks())
+		{
+			task.cancel();
+		}
+		
 		repository.save();
 	}
 	
@@ -93,5 +103,13 @@ public final class ExperienceShelves extends JavaPlugin {
 		if (sender instanceof Player) return true; // Handling in command preprocess for now
 		
 		return true;
+	}
+
+	/**
+	 * @return
+	 */
+	public static ExperienceShelves getInstance()
+	{
+		return instance;
 	}
 }
