@@ -1,5 +1,7 @@
 package com.majora.minecraft.experienceshelves.models;
 
+import java.util.Map;
+
 public interface IRepository<K, V> {
 	
 	void save();
@@ -9,4 +11,6 @@ public interface IRepository<K, V> {
 	V get(K key);
 	V remove(K key);
 	boolean containsKey(K key);
+	
+	Map<K, V> getData();
 }

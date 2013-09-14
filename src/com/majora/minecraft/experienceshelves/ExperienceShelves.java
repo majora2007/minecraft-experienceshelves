@@ -1,8 +1,12 @@
 package com.majora.minecraft.experienceshelves;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,17 +19,22 @@ import com.majora.minecraft.experienceshelves.listeners.PlayerListener;
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.JSONRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
+import com.majora.minecraft.experienceshelves.tasks.SendPacketTask;
 import com.majora.minecraft.experienceshelves.utils.FileUtils;
 
 public final class ExperienceShelves extends JavaPlugin {
 	
 	private static Logger consoleLogger = Logger.getLogger("Minecraft");
-	public static String prefix;
+	private static String prefix;
+	
+	private static final int	SEND_PACKET_INTERVAL	= 20;
+	private static final int	SEND_PACKET_DELAY	= 20;
 	
 	private static ExperienceShelves instance = null;
 	
 	private PlayerListener playerListener;
 	private IRepository<Location, XPVault> repository;
+	private List<BukkitTask> particlePacketTasks = new ArrayList<BukkitTask>(3);
 	
 	@Override
 	public void onEnable() 
@@ -51,6 +60,16 @@ public final class ExperienceShelves extends JavaPlugin {
 		// First check to see if the file exists, if not, this is our first time launching and we can ignore 
 		// this statement.
 		loadIfFileExitsts(vaultsFilePath);
+		scheduleParticleTasksForExistingVaults();
+	}
+
+	private void scheduleParticleTasksForExistingVaults() {
+		Map<Location, XPVault> rawData = repository.getData();
+		for (Location loc : rawData.keySet())
+		{
+			scheduleDefaultVaultAnimation(loc.getBlock());
+		}
+		
 	}
 
 	private void loadIfFileExitsts(final String vaultsFilePath) {
@@ -76,7 +95,7 @@ public final class ExperienceShelves extends JavaPlugin {
 	@Override
 	public void onDisable() 
 	{
-		for(BukkitTask task : playerListener.getTasks())
+		for(BukkitTask task : particlePacketTasks)
 		{
 			task.cancel();
 		}
@@ -105,11 +124,15 @@ public final class ExperienceShelves extends JavaPlugin {
 		return true;
 	}
 
-	/**
-	 * @return
-	 */
 	public static ExperienceShelves getInstance()
 	{
 		return instance;
+	}
+	
+	public void scheduleDefaultVaultAnimation(final Block block)
+	{
+		final Object packet = PacketFactory.createParticlePacket( ParticleType.MOB_SPELL_AMBIENT, block, 1.0f, 0.6f, 1.0f, 0.3f, 100 );
+		particlePacketTasks.add( new SendPacketTask( this, block.getLocation(), packet ).runTaskTimer( this, SEND_PACKET_DELAY, SEND_PACKET_INTERVAL ) );
+		//particlePacketTasks.add( new SendPacketTask( this.plugin, clickedBlock.getLocation(), packet ).runTaskTimer( this.plugin, SEND_PACKET_DELAY + new Random().nextInt( 19 ),  + new Random().nextInt( SEND_PACKET_INTERVAL ) ) );
 	}
 }

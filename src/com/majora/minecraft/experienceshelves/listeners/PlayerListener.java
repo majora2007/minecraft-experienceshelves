@@ -1,9 +1,6 @@
 package com.majora.minecraft.experienceshelves.listeners;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -18,32 +15,19 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.scheduler.BukkitTask;
 
 import com.majora.minecraft.experienceshelves.CommandHandler;
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
-import com.majora.minecraft.experienceshelves.PacketFactory;
-import com.majora.minecraft.experienceshelves.ParticleType;
 import com.majora.minecraft.experienceshelves.models.IRepository;
 import com.majora.minecraft.experienceshelves.models.XPVault;
-import com.majora.minecraft.experienceshelves.tasks.SendPacketTask;
 import com.majora.minecraft.experienceshelves.utils.Authentication;
 import com.majora.minecraft.experienceshelves.utils.Utility;
 
 public class PlayerListener implements Listener {
 	
-	/**
-	 * 
-	 */
-	private static final int	SEND_PACKET_INTERVAL	= 20;
-	/**
-	 * 
-	 */
-	private static final int	SEND_PACKET_DELAY	= 20;
 	private ExperienceShelves plugin;
 	private IRepository<Location, XPVault> repository;
 	private boolean moveState = false; // If move start was typed, this will be true. Set to false once /xps move stop typed.
-	private List<BukkitTask> particlePacketTasks;
 	
 	// NOTE: It looks like xp is store internally as a char, meaning max xp is 
 	// 65,635
@@ -55,7 +39,7 @@ public class PlayerListener implements Listener {
 		this.plugin = instance;
 		this.repository = repo;
 		
-		this.particlePacketTasks = new ArrayList<BukkitTask>(3);
+		//this.particlePacketTasks = new ArrayList<BukkitTask>(3);
 	}
 	
 	@EventHandler(priority=EventPriority.NORMAL)
@@ -306,10 +290,12 @@ public class PlayerListener implements Listener {
 				repository.save();
 				
 				// Register a task which will now send a packet to animate vault.
-				final Object packet = PacketFactory.createParticlePacket( ParticleType.MOB_SPELL_AMBIENT, clickedBlock, 1.0f, 0.6f, 1.0f, 0.3f, 100 );
+				this.plugin.scheduleDefaultVaultAnimation(clickedBlock);
+				
+				/*final Object packet = PacketFactory.createParticlePacket( ParticleType.MOB_SPELL_AMBIENT, clickedBlock, 1.0f, 0.6f, 1.0f, 0.3f, 100 );
 				particlePacketTasks.add( new SendPacketTask( this.plugin, clickedBlock.getLocation(), packet ).runTaskTimer( this.plugin, SEND_PACKET_DELAY, SEND_PACKET_INTERVAL ) );
 				//particlePacketTasks.add( new SendPacketTask( this.plugin, clickedBlock.getLocation(), packet ).runTaskTimer( this.plugin, SEND_PACKET_DELAY + new Random().nextInt( 19 ),  + new Random().nextInt( SEND_PACKET_INTERVAL ) ) );
-			}
+*/			}
 		}
 		return accessedVault;
 	}
@@ -329,13 +315,5 @@ public class PlayerListener implements Listener {
 	private boolean isClickedBlockXPVault( final Block block )
 	{
 		return block.getType() == Material.BOOKSHELF;
-	}
-
-	/**
-	 * @return List of all BukkitTasks responsible for sending packets to client.
-	 */
-	public List<BukkitTask> getTasks()
-	{
-		return particlePacketTasks;
 	}
 }

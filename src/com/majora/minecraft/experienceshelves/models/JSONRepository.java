@@ -147,4 +147,9 @@ public class JSONRepository implements IRepository<Location, XPVault> {
 		
 	}
 
+	@Override
+	public Map<Location, XPVault> getData() {
+		return vaults;
+	}
+
 }
