@@ -32,6 +32,7 @@ public class JSONRepository implements IRepository<Location, XPVault> {
 		vaults = new HashMap<Location, XPVault>();
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void save() 
 	{

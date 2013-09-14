@@ -3,21 +3,20 @@ package com.majora.minecraft.experienceshelves.tasks;
 import java.lang.reflect.InvocationTargetException;
 
 import org.bukkit.Location;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.majora.minecraft.experienceshelves.ExperienceShelves;
+import com.majora.minecraft.experienceshelves.models.XPVault;
 import com.majora.minecraft.experienceshelves.utils.ReflectionUtil;
 
 public class SendPacketTask extends BukkitRunnable
 {
-	private final JavaPlugin plugin;
+	private final XPVault vault;
 	private final Location location;
 	private final Object packet;
 	
-	public SendPacketTask(final JavaPlugin plugin, final Location location, final Object packet)
+	public SendPacketTask(final XPVault vault, final Location location, final Object packet)
 	{
-		this.plugin = plugin;
+		this.vault = vault;
 		this.location = location;
 		this.packet = packet;
 	}
@@ -28,7 +27,8 @@ public class SendPacketTask extends BukkitRunnable
 	@Override
 	public void run()
 	{
-		if (isWorldEmpty()) return;
+		if (isWorldEmpty()) return;		
+		if (vault.isLocked()) return;
 		
 		try
 		{

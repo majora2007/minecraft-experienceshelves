@@ -148,7 +148,7 @@ public final class ExperienceShelves extends JavaPlugin {
 	public void scheduleDefaultVaultAnimation(final XPVault vault, final Block block)
 	{
 		final Object packet = PacketFactory.createParticlePacket( ParticleType.MOB_SPELL_AMBIENT, block, 1.0f, 0.6f, 1.0f, 0.3f, 100 );
-		BukkitTask task = new SendPacketTask( this, block.getLocation(), packet ).runTaskTimer( this, SEND_PACKET_DELAY, SEND_PACKET_INTERVAL );
+		BukkitTask task = new SendPacketTask( vault, block.getLocation(), packet ).runTaskTimer( this, SEND_PACKET_DELAY, SEND_PACKET_INTERVAL );
 		vault.addParticleTask(task);
 		//particlePacketTasks.add( new SendPacketTask( this.plugin, clickedBlock.getLocation(), packet ).runTaskTimer( this.plugin, SEND_PACKET_DELAY + new Random().nextInt( 19 ),  + new Random().nextInt( SEND_PACKET_INTERVAL ) ) );
 	}
