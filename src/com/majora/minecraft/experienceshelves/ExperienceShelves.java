@@ -34,7 +34,6 @@ public final class ExperienceShelves extends JavaPlugin {
 	
 	private PlayerListener playerListener;
 	private IRepository<Location, XPVault> repository;
-	//private List<BukkitTask> particlePacketTasks = new ArrayList<BukkitTask>(3);
 	
 	@Override
 	public void onEnable() 
