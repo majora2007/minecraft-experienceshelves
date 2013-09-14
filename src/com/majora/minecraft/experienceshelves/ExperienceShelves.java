@@ -1,8 +1,8 @@
 package com.majora.minecraft.experienceshelves;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -34,7 +34,7 @@ public final class ExperienceShelves extends JavaPlugin {
 	
 	private PlayerListener playerListener;
 	private IRepository<Location, XPVault> repository;
-	private List<BukkitTask> particlePacketTasks = new ArrayList<BukkitTask>(3);
+	//private List<BukkitTask> particlePacketTasks = new ArrayList<BukkitTask>(3);
 	
 	@Override
 	public void onEnable() 
@@ -68,11 +68,13 @@ public final class ExperienceShelves extends JavaPlugin {
 
 	private void scheduleParticleTasksForExistingVaults() {
 		Map<Location, XPVault> rawData = repository.getData();
-		for (Location loc : rawData.keySet())
-		{
-			scheduleDefaultVaultAnimation(loc.getBlock());
-		}
-		
+		Iterator<Entry<Location, XPVault>> it = rawData.entrySet().iterator();
+    	
+    	while (it.hasNext())
+    	{
+    		Entry<Location, XPVault> pairs = it.next();
+    		scheduleDefaultVaultAnimation(pairs.getValue(), pairs.getKey().getBlock());
+    	}	
 	}
 
 	private void loadIfFileExitsts(final String vaultsFilePath) {
@@ -84,7 +86,6 @@ public final class ExperienceShelves extends JavaPlugin {
 		}
 	}
 	
-	//BUG:NOTE: This way of setting things do not work...
 	private void loadProperties() {
 		int creationItem = getConfig().getInt("creation-item", -1);
 		if (creationItem == -1) getConfig().set("creation-item", 0); // set to default
@@ -102,10 +103,19 @@ public final class ExperienceShelves extends JavaPlugin {
 	@Override
 	public void onDisable() 
 	{
-		for(BukkitTask task : particlePacketTasks)
-		{
-			task.cancel();
-		}
+		
+		Map<Location, XPVault> rawData = repository.getData();
+		Iterator<Entry<Location, XPVault>> it = rawData.entrySet().iterator();
+    	
+    	while (it.hasNext())
+    	{
+    		Entry<Location, XPVault> pairs = it.next();
+    		
+    		for(BukkitTask task : pairs.getValue().getParticleTasks())
+			{
+				task.cancel();
+			}
+    	}
 		
 		repository.save();
 	}
@@ -136,10 +146,11 @@ public final class ExperienceShelves extends JavaPlugin {
 		return instance;
 	}
 	
-	public void scheduleDefaultVaultAnimation(final Block block)
+	public void scheduleDefaultVaultAnimation(final XPVault vault, final Block block)
 	{
 		final Object packet = PacketFactory.createParticlePacket( ParticleType.MOB_SPELL_AMBIENT, block, 1.0f, 0.6f, 1.0f, 0.3f, 100 );
-		particlePacketTasks.add( new SendPacketTask( this, block.getLocation(), packet ).runTaskTimer( this, SEND_PACKET_DELAY, SEND_PACKET_INTERVAL ) );
+		BukkitTask task = new SendPacketTask( this, block.getLocation(), packet ).runTaskTimer( this, SEND_PACKET_DELAY, SEND_PACKET_INTERVAL );
+		vault.addParticleTask(task);
 		//particlePacketTasks.add( new SendPacketTask( this.plugin, clickedBlock.getLocation(), packet ).runTaskTimer( this.plugin, SEND_PACKET_DELAY + new Random().nextInt( 19 ),  + new Random().nextInt( SEND_PACKET_INTERVAL ) ) );
 	}
 }

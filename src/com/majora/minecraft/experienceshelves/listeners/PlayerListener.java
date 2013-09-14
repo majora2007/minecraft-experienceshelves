@@ -15,6 +15,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.scheduler.BukkitTask;
 
 import com.majora.minecraft.experienceshelves.CommandHandler;
 import com.majora.minecraft.experienceshelves.ExperienceShelves;
@@ -87,7 +88,6 @@ public class PlayerListener implements Listener {
 	public void onBlockBreak(BlockBreakEvent event)
 	{
 		if (event.isCancelled()) return;
-
 		
 		final Block block = event.getBlock();
 		if (block == null) return;
@@ -102,7 +102,13 @@ public class PlayerListener implements Listener {
 					// Store the balance of the vault in Player's metadata.
 					Utility.setMetadata(event.getPlayer(), "experienceshelves.balance", repository.get(block.getLocation()).getRealBalance(), this.plugin);
 				}
-				
+
+				// Remove all particle tasks on the vault before the move
+				for (BukkitTask task : vault.getParticleTasks())
+				{
+					task.cancel();
+				}
+
 				repository.remove(block.getLocation());
 				repository.save();
 			} else {
@@ -122,21 +128,22 @@ public class PlayerListener implements Listener {
 		{
 			if (event.getPlayer().hasMetadata("experienceshelves.balance"))
 			{
-				ExperienceShelves.log("Player has metadata: experienceshelves.balance");
+				long balance = ((Long) Utility.getMetadata(event.getPlayer(), "experienceshelves.balance", this.plugin)).longValue();
+				final XPVault vault = createXPVault(block, event.getPlayer());
+				vault.setBalance(balance);
+				
+				if (vault.getParticleTasks().isEmpty())
+				{
+					this.plugin.scheduleDefaultVaultAnimation(vault, block);
+				}
+				
+				repository.put(block.getLocation(), vault);
+				repository.save();
+				
+				// Remove metadata
+				block.removeMetadata("experienceshelves.balance", this.plugin);
 			}
-			
-			long balance = ((Long) Utility.getMetadata(event.getPlayer(), "experienceshelves.balance", this.plugin)).longValue();
-			final XPVault vault = createXPVault(block, event.getPlayer());
-			vault.setBalance(balance);
-			
-			repository.put(block.getLocation(), vault);
-			repository.save();
-			
-			// Remove metadata
-			block.removeMetadata("experienceshelves.balance", this.plugin);
 		}
-		
-		
 	}
 	
 	
@@ -166,7 +173,7 @@ public class PlayerListener implements Listener {
 				return;
 			}
 			
-			if (Utility.isRightClick( event ) && isPlayerHandValid(player)) // && Utility.isPlayerHandEmpty(event)
+			if (Utility.isRightClick( event ) && isPlayerHandValid(player))
 			{
 				if (canWithdrawFromVault(accessedVault))
 				{
@@ -174,7 +181,7 @@ public class PlayerListener implements Listener {
 				} else {
 					player.sendMessage(ChatColor.GREEN + "The vault is empty.");
 				}
-			} else if (Utility.isLeftClick(event) && isPlayerHandValid(player)) // && Utility.isPlayerHandEmpty(event)
+			} else if (Utility.isLeftClick(event) && isPlayerHandValid(player))
 			{
 				if (playerCanStore(totalXp))
 				{
@@ -290,7 +297,7 @@ public class PlayerListener implements Listener {
 				// Register a task which will now send a packet to animate vault.
 				if (this.plugin.getConfig().getBoolean("show-particles"))
 				{
-					this.plugin.scheduleDefaultVaultAnimation(clickedBlock);
+					this.plugin.scheduleDefaultVaultAnimation(accessedVault, clickedBlock);
 				}
 					
 

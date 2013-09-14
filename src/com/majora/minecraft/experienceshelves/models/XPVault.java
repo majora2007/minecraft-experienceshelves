@@ -1,6 +1,7 @@
 package com.majora.minecraft.experienceshelves.models;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
@@ -33,9 +34,8 @@ public class XPVault {
 	
 	private boolean locked = false;
 	
-	// JVM: I am not sure if I need to associate the Tasks to a vault, so here are temp fields
-	//private List<BukkitTask> particleTasks;
-	// END
+	// tasks associated with a vault. These are needed to be stored here to cancel when a vault breaks or is moved.
+	private List<BukkitTask> particleTasks = new ArrayList<BukkitTask>(3);
 	
 	public XPVault() {}
 
@@ -124,6 +124,18 @@ public class XPVault {
 		this.locked = locked;
 	}
 	
+	public void addParticleTask(BukkitTask particleTask) {
+		this.particleTasks.add(particleTask);
+	}
+	
+	public List<BukkitTask> getParticleTasks() {
+		return particleTasks;
+	}
+
+	public void setParticleTasks(List<BukkitTask> particleTasks) {
+		this.particleTasks = particleTasks;
+	}
+
 	/**
 	 * Helper method to add to current balance.
 	 * @param balance
