@@ -4,7 +4,7 @@
   <groupId>com.majora.minecraft.experienceshelves</groupId>
   <artifactId>ExperienceShelves</artifactId>
   <name>ExperienceShelves</name>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <description>Allows a player to store and withdraw experience from blocks such as Bookshelves.</description>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -70,22 +70,22 @@
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>bukkit</artifactId>
-      <version>1.6.2-R0.1</version>
+      <version>1.7.2-R0.3</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>craftbukkit</artifactId>
-      <version>1.6.2-R0.2-SNAPSHOT</version>
+      <version>1.7.2-R0.3-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
   <properties>
     <main.class>com.majora.minecraft.experienceshelves.ExperienceShelves</main.class>
-    <cb_package>v1_6_R2</cb_package>
+    <cb_package>v1_7_R3</cb_package>
     <project.version>1.0.2</project.version>
-    <minecraft.version>1.6.2</minecraft.version>
-    <craftbukkit.version>R0.2</craftbukkit.version>
+    <minecraft.version>1.7.2</minecraft.version>
+    <craftbukkit.version>R0.3</craftbukkit.version>
   </properties>
 </project>
 

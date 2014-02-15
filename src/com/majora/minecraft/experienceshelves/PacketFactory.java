@@ -7,7 +7,7 @@ import com.majora.minecraft.experienceshelves.utils.ReflectionUtil;
 
 
 /**
- * Packet details found at //http://wiki.vg/Protocol
+ * Packet details found at http://wiki.vg/Protocol
  */
 public final class PacketFactory
 {
@@ -35,9 +35,10 @@ public final class PacketFactory
 	
 	public static Object createParticlePacket(String effect, Block block, float xOffset, float yOffset, float zOffset, float speed, int numOfParticles)
 	{
+		// Packet63WorldParticles renamed to PacketPlayOutWorldParticles
 		Object packet;
 		try {
-			packet = Class.forName("net.minecraft.server." + ReflectionUtil.getVersionString() + ".Packet63WorldParticles").getConstructor().newInstance();
+			packet = Class.forName("net.minecraft.server." + ReflectionUtil.getVersionString() + ".PacketPlayOutWorldParticles").getConstructor().newInstance();
 			
 			ReflectionUtil.setValue(packet, "a", effect/* + "_" + idValue + "_" + metaValue*/); // particle name
 			ReflectionUtil.setValue(packet, "b", (float) block.getX()); //x
