@@ -2,11 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.majora.minecraft.experienceshelves</groupId>
   <artifactId>ExperienceShelves</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <name>ExperienceShelves</name>
   <description>Allows a player to store and withdraw experience from blocks such as Bookshelves.</description>
   <properties>
-        <project.version>1.0.2</project.version>
+        <project.version>1.0.3</project.version>
         <minecraft.version>1.7.2</minecraft.version>
         <craftbukkit.version>R0.3</craftbukkit.version>
         <cb_package>v1_7_R3</cb_package>

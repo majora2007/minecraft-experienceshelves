@@ -1,5 +1,5 @@
 name: ExperienceShelves
-version: 1.0.2
+version: 1.0.3
 main: com.majora.minecraft.experienceshelves.ExperienceShelves
 
 description: A simple plugin which allows a player to store and withdraw experience in bookshelves. Inspired by the defunct mode MagicBookshelf by Derthmonuter.
