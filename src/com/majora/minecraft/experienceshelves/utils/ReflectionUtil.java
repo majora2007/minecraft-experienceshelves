@@ -1,3 +1,7 @@
+/**
+ * Distributed under The MIT License
+ * http://www.opensource.org/licenses/MIT
+ */
 package com.majora.minecraft.experienceshelves.utils;
 
 import java.lang.reflect.Field;

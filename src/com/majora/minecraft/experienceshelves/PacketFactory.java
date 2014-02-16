@@ -1,5 +1,8 @@
+/**
+ * Distributed under The MIT License
+ * http://www.opensource.org/licenses/MIT
+ */
 package com.majora.minecraft.experienceshelves;
-
 
 import org.bukkit.block.Block;
 
